@@ -1,9 +1,21 @@
 import { Server } from 'http';
 
-import { useFourStackItems } from '@bitauth/libauth';
+//import { isPayToScriptHash } from '@bitauth/libauth';
+// import { useFourStackItems } from '@bitauth/libauth';
 import io from 'socket.io';
-import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
+// import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
 import { v4 as uuidv4 } from 'uuid';
+
+interface User {
+  userId: string,
+  userName: string,
+  image: string,
+}
+
+interface Room {
+  users: User[],
+  host: string,
+}
 
 export default class Manager {
   readonly server!: io.Server;
@@ -11,12 +23,7 @@ export default class Manager {
     string,
     (data: Record<string, any>, ack?: (data: any) => void) => void
   ][];
-  users!: {
-    [userId: string]: [
-      string,  // username
-      string,  // user image
-    ]    
-  };
+  private rooms: { [roomId: string]: Room };
 
   constructor(httpServer: Server) {
     this.server = io(httpServer);
@@ -26,53 +33,71 @@ export default class Manager {
       ['create_party', this.onSocketCreateParty],
     ];
 
-    this.users = {};
-   
+    this.rooms = {};
   }
 
   listen() {
     this.server.on('connection', (socket) => {
-      console.log('socket', socket.id, 'connected');
 
-      this.users[socket.id] = [this.generateNewName(), "img"]; 
+      console.log('User', socket.id, 'connected');
+
+      // console.log(this.u);
+      // console.log(this.host);
 
       this.events.forEach(([event, handler]) => {
-        socket.on(event, handler.bind(socket));
+        socket.on(event, handler.bind(this, socket));
       });
     });
   }
 
-  generateNewName() {
-
-    const takenSet = this.getTakenNames()
-
-    const randomName = uniqueNamesGenerator({
-      dictionaries: [adjectives, animals], 
-      length: 2
-    });
-
-    return randomName;
+  onSocketDisconnect(sock: io.Socket) {
+    this.removeUser(sock);
+    console.log('socket', sock.id, 'disconnected');
   }
 
-  getTakenNames(): Set<string> {
-    return new Set<string>();
+  removeUser(sock: io.Socket): void {
+    if (Object.keys(sock.rooms).length !== 0) {
+      const roomId: string = sock.rooms[sock.rooms.keys[0]]; // assuming a user can only be in one room at a time
+      this.rooms[roomId].users = this.rooms[roomId].users.filter((user, index, array) => {
+        return user.userId != sock.id;
+      });
+
+      if (sock.id === this.rooms[roomId].host) {
+        this.newHost(roomId);
+      }
+    }
   }
 
-  onSocketDisconnect(this: io.Socket) {
-    console.log('socket', this.id, 'disconnected');
+  newHost(roomId: string): void {
+    const room: Room = this.rooms[roomId];
+    const randIdx: number = Math.floor(Math.random() * room.users.length);
+    console.log("Chose user", room.users[randIdx].userName, "as new host.")
+    room.host = room.users[randIdx].userId;
   }
 
   onSocketCreateParty(
-    this: io.Socket,
+    sock: io.Socket,
     ack: (data: { roomId: string }) => void
   ) {
     console.log('create room');
     const roomId = uuidv4();
 
-    this.join(roomId, () =>
+    sock.join(roomId, () =>
       ack({
         roomId,
       })
     );
+
+    this.createNewUser(sock, roomId);
+  }
+
+  createNewUser(sock: io.Socket, roomId: number): void {
+    const newUser: User = {
+      userId: sock.id,
+      userName: "User" + this.rooms[roomId].users.length,
+      image: "newImage",
+    }
+
+    this.rooms[roomId].users.push(newUser); 
   }
 }
