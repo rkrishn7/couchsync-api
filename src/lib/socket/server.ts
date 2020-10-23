@@ -1,20 +1,17 @@
 import { Server } from 'http';
 
-//import { isPayToScriptHash } from '@bitauth/libauth';
-// import { useFourStackItems } from '@bitauth/libauth';
 import io from 'socket.io';
-// import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
 import { v4 as uuidv4 } from 'uuid';
 
 interface User {
-  userId: string,
-  userName: string,
-  image: string,
+  userId: string;
+  userName: string;
+  image: string;
+  isHost: boolean;
 }
 
 interface Room {
-  users: User[],
-  host: string,
+  users: User[];
 }
 
 export default class Manager {
@@ -41,9 +38,6 @@ export default class Manager {
 
       console.log('User', socket.id, 'connected');
 
-      // console.log(this.u);
-      // console.log(this.host);
-
       this.events.forEach(([event, handler]) => {
         socket.on(event, handler.bind(this, socket));
       });
@@ -62,17 +56,34 @@ export default class Manager {
         return user.userId != sock.id;
       });
 
-      if (sock.id === this.rooms[roomId].host) {
+      const user: User = this.getUser(this.rooms[roomId], sock.id);
+      if (user === null || user.isHost) {
         this.newHost(roomId);
       }
     }
   }
 
-  newHost(roomId: string): void {
+  private getUser(room: Room, userId: string): User {
+    for (const user of room.users) {
+      if (user.userId === userId) {
+        return user;
+      }
+    }
+    return null;
+  }
+
+  private newHost(roomId: string): void {
     const room: Room = this.rooms[roomId];
+    this.clearHost(room);
     const randIdx: number = Math.floor(Math.random() * room.users.length);
     console.log("Chose user", room.users[randIdx].userName, "as new host.")
-    room.host = room.users[randIdx].userId;
+    room.users[randIdx].isHost = true;
+  }
+
+  private clearHost(room: Room): void {
+    for (const user of room.users) {
+      user.isHost = false;
+    }
   }
 
   onSocketCreateParty(
@@ -88,14 +99,15 @@ export default class Manager {
       })
     );
 
-    this.createNewUser(sock, roomId);
+    this.createNewUser(sock, roomId, true);
   }
 
-  createNewUser(sock: io.Socket, roomId: number): void {
+  createNewUser(sock: io.Socket, roomId: number, setHost = false): void {
     const newUser: User = {
       userId: sock.id,
       userName: "User" + this.rooms[roomId].users.length,
       image: "newImage",
+      isHost: setHost,
     }
 
     this.rooms[roomId].users.push(newUser); 
