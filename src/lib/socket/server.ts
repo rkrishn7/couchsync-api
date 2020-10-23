@@ -2,6 +2,8 @@ import { Server } from 'http';
 
 //import { isPayToScriptHash } from '@bitauth/libauth';
 // import { useFourStackItems } from '@bitauth/libauth';
+import Avatars from '@dicebear/avatars';
+import sprites from '@dicebear/avatars-identicon-sprites';
 import io from 'socket.io';
 import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
 import { v4 as uuidv4 } from 'uuid';
@@ -103,13 +105,20 @@ export default class Manager {
   }
 
   private createNewUser(sock: io.Socket, roomId: string): void {
+    const userName: string = this.generateName(roomId);
     const newUser: User = {
       userId: sock.id,
-      userName: this.generateName(roomId),
-      image: "newImage",
+      userName: userName,
+      image: this.generateImage(userName),
     }
 
     this.rooms[roomId].users.push(newUser); 
+  }
+
+  private generateImage(userName: string): string {
+    const options = {}; // I'm leaving this blank for now, but we'll want to add options so the image fits nicely in the chat window
+    const avatars = new Avatars(sprites, options);
+    return avatars.create(userName);
   }
 
   private generateName(roomId: string): string {
