@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model migrations {
+  id     Int      @id @default(autoincrement())
+  name   String
+  run_on DateTime
+}
+
+model parties {
+  id           Int       @id @default(autoincrement())
+  party_hash   String
+  join_url     String
+  is_active    Boolean?  @default(true)
+  member_count Int?      @default(1)
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @default(now())
+}
