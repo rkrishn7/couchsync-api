@@ -22,6 +22,7 @@ export default class Manager {
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
+      [SocketEvents.URL_CHANGE, this.onSocketURLChange],
     ];
   }
 
