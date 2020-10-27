@@ -1,5 +1,5 @@
 import { URL_REGEX } from '@app/lib/constants/regex';
-import partyService from '@app/lib/services/party';
+import PartyService from '@app/lib/services/party';
 import { validate } from '@app/lib/utils/middleware';
 import { Request, Response, Router } from 'express';
 import Joi from 'joi';
@@ -16,7 +16,7 @@ router.post(
   async (req: Request, res: Response) => {
     const partyInitData = req.body;
 
-    const partyDetails = await partyService.create(partyInitData);
+    const partyDetails = await PartyService.create(partyInitData);
 
     return res.status(200).json(partyDetails);
   }

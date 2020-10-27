@@ -14,11 +14,24 @@ model migrations {
 }
 
 model parties {
-  id           Int       @id @default(autoincrement())
-  hash         String    @unique
+  id           Int        @id @default(autoincrement())
+  hash         String     @unique
   join_url     String
-  is_active    Boolean?  @default(false)
-  member_count Int?      @default(0)
-  created_at   DateTime? @default(now())
-  updated_at   DateTime? @default(now())
+  is_active    Boolean?   @default(false)
+  member_count Int?       @default(0)
+  created_at   DateTime?  @default(now())
+  updated_at   DateTime?  @default(now())
+  messages     messages[]
+}
+
+model messages {
+  id         Int       @id @default(autoincrement())
+  content    String
+  party_id   Int
+  sent_at    DateTime
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  parties    parties   @relation(fields: [party_id], references: [id])
+
+  @@index([party_id], name: "party_id")
 }
