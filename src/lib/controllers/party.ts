@@ -6,6 +6,23 @@ import Joi from 'joi';
 
 const router = Router();
 
+router.get(
+  '/',
+  validate(
+    Joi.object({
+      partyHash: Joi.string().required(),
+    }),
+    'query'
+  ),
+  async (req: Request, res: Response) => {
+    const party = await PartyService.get({
+      partyHash: req.query.partyHash as string,
+    });
+
+    return res.status(200).json(party);
+  }
+);
+
 router.post(
   '/create',
   validate(
@@ -14,11 +31,12 @@ router.post(
     })
   ),
   async (req: Request, res: Response) => {
+    // The init data consists of the watch url
     const partyInitData = req.body;
 
-    const partyDetails = await PartyService.create(partyInitData);
+    const party = await PartyService.create(partyInitData);
 
-    return res.status(200).json(partyDetails);
+    return res.status(200).json(party);
   }
 );
 

@@ -6,6 +6,10 @@ interface CreateParams {
   watchUrl: string;
 }
 
+interface GetParams {
+  partyHash: string;
+}
+
 export default class Party {
   static async create({ watchUrl }: CreateParams) {
     const hash = uuidv4();
@@ -28,5 +32,13 @@ export default class Party {
       join_url: joinUrl,
       id: record.id,
     };
+  }
+
+  static async get({ partyHash }: GetParams) {
+    return dbClient.parties.findFirst({
+      where: {
+        hash: partyHash,
+      },
+    });
   }
 }

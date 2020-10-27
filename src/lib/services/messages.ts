@@ -5,6 +5,7 @@ interface SearchParams {
 }
 
 interface CreateParams {
+  socketId: string;
   partyId: number;
   content: string;
   sentAt: Date;
@@ -18,20 +19,40 @@ export default class Messages {
       },
     });
 
+    // TODO: add extra layer of security
+    // accept a socket id and make sure the user is in the
+    // party before returning new messages
+
     return { messages };
   }
 
-  static async create({ partyId, content, sentAt }: CreateParams) {
-    await dbClient.messages.create({
+  static async create({ partyId, content, sentAt, socketId }: CreateParams) {
+    const user = await dbClient.users.findFirst({
+      where: {
+        socket_id: socketId,
+        is_active: true,
+      },
+    });
+
+    if (!user) throw new Error('Fatal: Invalid User');
+
+    const newMessage = await dbClient.messages.create({
       data: {
         parties: {
           connect: {
             id: partyId,
           },
         },
+        users: {
+          connect: {
+            id: user.id,
+          },
+        },
         content,
         sent_at: sentAt,
       },
     });
+
+    return newMessage;
   }
 }

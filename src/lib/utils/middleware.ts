@@ -2,12 +2,13 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { Schema } from 'joi';
 
-export const validate = (schema: Schema) => (
-  req: Request,
-  res: Response,
-  next: () => void
-) => {
-  const { error } = schema.validate(req.body);
+type RequestValidationobject = 'body' | 'query';
+
+export const validate = (
+  schema: Schema,
+  obj: RequestValidationobject = 'body'
+) => (req: Request, res: Response, next: () => void) => {
+  const { error } = schema.validate(req[obj]);
 
   if (error) {
     const { details } = error;
