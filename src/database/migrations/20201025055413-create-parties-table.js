@@ -18,10 +18,10 @@ exports.up = function (db) {
   return db.runSql(`
     CREATE TABLE parties (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      party_hash VARCHAR(40) NOT NULL,
+      hash VARCHAR(40) NOT NULL UNIQUE,
       join_url TEXT NOT NULL,
-      is_active BOOLEAN DEFAULT TRUE,
-      member_count INT DEFAULT 1,
+      is_active BOOLEAN DEFAULT FALSE,
+      member_count INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )

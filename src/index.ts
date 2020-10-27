@@ -18,10 +18,9 @@ const main = () => {
 
   const httpServer = http.createServer(app);
 
-  new socketManager(httpServer).listen();
-
   const { PORT, STAGE } = settings;
 
+  new socketManager(httpServer).listen();
   httpServer.listen(PORT, () =>
     console.log(`Server started in ${STAGE} mode. Listening on port ${PORT}`)
   );

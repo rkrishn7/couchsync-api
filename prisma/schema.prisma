@@ -15,10 +15,10 @@ model migrations {
 
 model parties {
   id           Int       @id @default(autoincrement())
-  party_hash   String
+  hash         String    @unique
   join_url     String
-  is_active    Boolean?  @default(true)
-  member_count Int?      @default(1)
+  is_active    Boolean?  @default(false)
+  member_count Int?      @default(0)
   created_at   DateTime? @default(now())
   updated_at   DateTime? @default(now())
 }
