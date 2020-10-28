@@ -22,7 +22,7 @@ export default class Manager {
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
-      [SocketEvents.URL_CHANGE, this.onSocketURLChange],
+      //[SocketEvents.URL_CHANGE, this.onSocketURLChange],
     ];
   }
 
@@ -93,4 +93,21 @@ export default class Manager {
       messages,
     });
   }
+  /*
+  async onSocketURLChange(
+    this: io.Socket,
+    data: { partyId: number, newHash: string },
+    ack: (data: { partyHash: any }) => void
+  ){
+    // add colors and make a distinct logging function maybe? QoL improvement
+    // https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
+    const { newHash } = data;
+    //TODO: dispatch new URL to everyone in party
+    this.to(partyHash).emit(partyHash)
+    ack({
+
+    });
+    console.log("\x1b[34m",`[Couch Sync] ${data}`, "\x1b[0m");
+  }
+  */
 }
