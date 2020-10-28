@@ -40,18 +40,6 @@ export default class Manager {
     });
   }
 
-  applyMiddleware(socket: io.Socket) {
-    // For client
-    /*socket.use((packet, next) => {
-      // packet[1] is the packet data
-      if (packet[1]) {
-        console.log('data', packet[1]);
-        packet[1] =
-
-      }
-    })*/
-  }
-
   async onSocketDisconnect(this: io.Socket) {
     console.log('socket', this.id, 'disconnected');
     await UserService.deactivate({
