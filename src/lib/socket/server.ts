@@ -1,7 +1,11 @@
 import { Server } from 'http';
 
+import MessageService from '@app/lib/services/messages';
+import UserService from '@app/lib/services/users';
+import { Message } from '@app/lib/types';
 import io from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
+
+import { SocketEvents } from './events';
 
 export default class Manager {
   readonly server!: io.Server;
@@ -14,35 +18,78 @@ export default class Manager {
     this.server = io(httpServer);
 
     this.events = [
-      ['disconnect', this.onSocketDisconnect],
-      ['create_party', this.onSocketCreateParty],
+      [SocketEvents.DISCONNECT, this.onSocketDisconnect],
+      [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
+      [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
+      [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
     ];
   }
 
   listen() {
     this.server.on('connection', (socket) => {
+      // Persist the new user
+      UserService.create({
+        socketId: socket.id,
+      });
+
       console.log('socket', socket.id, 'connected');
+
       this.events.forEach(([event, handler]) => {
         socket.on(event, handler.bind(socket));
       });
     });
   }
 
-  onSocketDisconnect(this: io.Socket) {
+  async onSocketDisconnect(this: io.Socket) {
     console.log('socket', this.id, 'disconnected');
+    await UserService.deactivate({
+      socketId: this.id,
+    });
   }
 
-  onSocketCreateParty(
+  async onSocketJoinParty(
     this: io.Socket,
-    ack: (data: { roomId: string }) => void
+    data: { partyHash: string },
+    ack: (data: { party: any }) => void
   ) {
-    console.log('create room');
-    const roomId = uuidv4();
+    const party = await UserService.joinParty({
+      hash: data.partyHash,
+      socketId: this.id,
+    });
 
-    this.join(roomId, () =>
+    this.join(party.hash, () =>
       ack({
-        roomId,
+        party,
       })
     );
+  }
+
+  async onSocketSendMessage(
+    this: io.Socket,
+    data: Message,
+    ack: (data: { message: any }) => void
+  ) {
+    const message = await MessageService.create({
+      socketId: this.id,
+      ...data,
+    });
+    this.to(data.partyHash).emit(SocketEvents.NEW_MESSAGE, { message });
+
+    ack({
+      message,
+    });
+  }
+
+  async onSocketGetMessages(
+    this: io.Socket,
+    data: { partyId: number },
+    ack: (data: { messages: any[] }) => void
+  ) {
+    const { partyId } = data;
+    const { messages } = await MessageService.search({ partyId });
+
+    ack({
+      messages,
+    });
   }
 }

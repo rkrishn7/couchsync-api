@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model migrations {
+  id     Int      @id @default(autoincrement())
+  name   String
+  run_on DateTime
+}
+
+model parties {
+  id           Int        @id @default(autoincrement())
+  hash         String     @unique
+  join_url     String
+  is_active    Boolean?   @default(false)
+  member_count Int?       @default(0)
+  created_at   DateTime?  @default(now())
+  updated_at   DateTime?  @default(now())
+  messages     messages[]
+  users        users[]
+}
+
+model messages {
+  id         Int       @id @default(autoincrement())
+  content    String
+  party_id   Int
+  sent_at    DateTime
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  user_id    Int
+  parties    parties   @relation(fields: [party_id], references: [id])
+  users      users     @relation(fields: [user_id], references: [id])
+
+  @@index([party_id], name: "party_id")
+  @@index([user_id], name: "user_id")
+}
+
+model users {
+  id         Int        @id @default(autoincrement())
+  socket_id  String
+  is_active  Boolean?
+  party_id   Int?
+  name       String
+  avatar_url String?
+  created_at DateTime?  @default(now())
+  updated_at DateTime?  @default(now())
+  parties    parties?   @relation(fields: [party_id], references: [id])
+  messages   messages[]
+
+  @@unique([socket_id, is_active], name: "socket_id_is_active_unique")
+  @@index([party_id], name: "party_id")
+}

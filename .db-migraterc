@@ -1,0 +1,4 @@
+{
+  "migrations-dir": "./src/database/migrations",
+  "configFile": "./src/database/config/database.json"
+}
