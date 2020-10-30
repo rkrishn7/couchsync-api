@@ -50,7 +50,7 @@ export default class Users {
 
     if (!party) throw new Error('Fatal: No party found');
 
-    dbClient.users.update({
+    await dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
           socket_id: socketId,
