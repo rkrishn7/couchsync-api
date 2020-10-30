@@ -43,7 +43,7 @@ export default class Party {
   }
 
   static async getPartyWithUsers({ partyHash }: GetParams) {
-    const party = dbClient.parties.findFirst({
+    return dbClient.parties.findFirst({
       where: {
         hash: partyHash,
       },
@@ -51,7 +51,6 @@ export default class Party {
         users: true,
       },
     });
-    return party;
   }
 
   static async getCurrentUsernames({ partyHash }: GetParams): Promise<Set<string>> {
@@ -59,12 +58,9 @@ export default class Party {
       partyHash: partyHash,
     });
     const usernames: string[] = [];
-    console.log(party);
     for (const user of party.users) {
       usernames.push(user.name);
     }
-    console.log(usernames);
     return new Set(usernames);
   }
-
 }

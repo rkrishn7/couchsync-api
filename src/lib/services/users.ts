@@ -1,7 +1,5 @@
 import dbClient from '@app/database/client';
 import PartyService from '@app/lib/services/party';
-import Avatars from '@dicebear/avatars';
-import sprites from '@dicebear/avatars-identicon-sprites';
 import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
 
 interface CreateParams {
@@ -23,8 +21,6 @@ export default class Users {
     const user = await dbClient.users.create({
       data: {
         is_active: true,
-        name: "temp",
-        avatar_url: "temp",
         socket_id: socketId,
       },
     });
@@ -56,8 +52,8 @@ export default class Users {
     if (!party) throw new Error('Fatal: No party found');
 
     const username: string = await Users.generateName(hash);
-    console.log(socketId);
-    dbClient.users.update({
+    const image: string = Users.generateImage(username)
+    await dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
           socket_id: socketId,
@@ -71,16 +67,27 @@ export default class Users {
           },
         },
         name: username,
-        avatar_url: Users.generateImage(username),
+        avatar_url: image,
       },
     });
     return party;
   }
 
   private static generateImage(userName: string): string {
-    const options = {}; // I'm leaving this blank for now, but we'll want to add options so the image fits nicely in the chat window
-    const avatars = new Avatars(sprites, options);
-    return avatars.create(userName);
+    /*
+     * GET Options
+     * r : radius of icon 
+     * m : margin of icon
+     * b : background color - 24 bit rgb
+     * w : width of icon
+     * h : height of icon
+     * colorLevel : brightness of color
+     * 
+     * EX: ?r=4&m=2&b=%23b99d9d&w=1&h=1&colorLevel=800
+     */
+    const options = ""; // I'm leaving this blank for now, but we'll want to add options so the image fits nicely in the chat window
+    const baseUrl = "https://avatars.dicebear.com/api/identicon/";
+    return baseUrl + encodeURIComponent(userName) + ".svg" + options;
   }
 
   private static async generateName(partyHash: string): Promise<string> {
