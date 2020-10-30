@@ -16,7 +16,6 @@ interface JoinPartyParams {
 }
 
 export default class Users {
-
   static async create({ socketId }: CreateParams) {
     const user = await dbClient.users.create({
       data: {
@@ -53,13 +52,12 @@ export default class Users {
     if (!party) throw new Error('Fatal: No party found');
 
     const username: string = await Users.generateName(hash);
-    const image: string = Users.generateImage(username)
     await dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
           socket_id: socketId,
           is_active: true,
-        }, 
+        },
       },
       data: {
         parties: {
@@ -68,7 +66,7 @@ export default class Users {
           },
         },
         name: username,
-        avatar_url: image,
+        avatar_url: Users.generateImage(username),
       },
     });
     return party;
