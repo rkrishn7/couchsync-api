@@ -33,3 +33,7 @@ To revert a specific migration, run `yarn db:migrate:revert <filename_without_ex
 ### Running Migrations
 
 To run the latest migrations, run `yarn db:migrate`
+
+Some helpful resources for Prisma:
+
+- https://github.com/prisma/docs/issues/800
