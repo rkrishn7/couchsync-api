@@ -22,6 +22,7 @@ export default class Users {
       data: {
         is_active: true,
         socket_id: socketId,
+        name: "temp",
       },
     });
 

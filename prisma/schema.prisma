@@ -45,7 +45,7 @@ model users {
   socket_id  String
   is_active  Boolean?
   party_id   Int?
-  name       String?
+  name       String
   avatar_url String?
   created_at DateTime?  @default(now())
   updated_at DateTime?  @default(now())
