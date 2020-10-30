@@ -1,4 +1,8 @@
 import dbClient from '@app/database/client';
+import PartyService from '@app/lib/services/party';
+import Avatars from '@dicebear/avatars';
+import sprites from '@dicebear/avatars-identicon-sprites';
+import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
 
 interface CreateParams {
   socketId: string;
@@ -14,12 +18,13 @@ interface JoinPartyParams {
 }
 
 export default class Users {
+
   static async create({ socketId }: CreateParams) {
     const user = await dbClient.users.create({
       data: {
         is_active: true,
-        name: 'TODO: Generate random name',
-        avatar_url: 'TODO: Generate avatar url',
+        name: "temp",
+        avatar_url: "temp",
         socket_id: socketId,
       },
     });
@@ -50,12 +55,14 @@ export default class Users {
 
     if (!party) throw new Error('Fatal: No party found');
 
+    const username: string = await Users.generateName(hash);
+    
     dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
           socket_id: socketId,
           is_active: true,
-        },
+        }, 
       },
       data: {
         parties: {
@@ -63,9 +70,33 @@ export default class Users {
             id: party.id,
           },
         },
+        name: username,
+        avatar_url: Users.generateImage(username),
       },
     });
 
     return party;
+  }
+
+  private static generateImage(userName: string): string {
+    const options = {}; // I'm leaving this blank for now, but we'll want to add options so the image fits nicely in the chat window
+    const avatars = new Avatars(sprites, options);
+    return avatars.create(userName);
+  }
+
+  private static async generateName(partyHash: string): Promise<string> {
+    const set: Set<string> = await PartyService.getCurrentUsernames({partyHash});
+    const nameConfig: Config = {
+      dictionaries: [adjectives, animals],
+      separator: ' ',
+      style: 'capital',
+      length: 2,
+    };
+    let randName: string;
+    do {
+      randName = uniqueNamesGenerator(nameConfig);
+    } while (set.has(randName));
+    console.log("New name:", randName);
+    return randName;
   }
 }

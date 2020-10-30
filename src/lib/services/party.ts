@@ -41,4 +41,29 @@ export default class Party {
       },
     });
   }
+
+  static async getPartyWithUsers({ partyHash }: GetParams) {
+    const party = dbClient.parties.findFirst({
+      where: {
+        hash: partyHash,
+      },
+      include: {
+        users: true,
+      },
+    });
+    return party;
+  }
+
+  static async getCurrentUsernames({ partyHash }: GetParams): Promise<Set<string>> {
+    const party = await Party.getPartyWithUsers({
+      partyHash: partyHash,
+    });
+    const usernames: string[] = [];
+    console.log(party);
+    for (const user of party.users) {
+      usernames.push(user.name);
+    }
+    return new Set(usernames);
+  }
+
 }
