@@ -56,7 +56,7 @@ export default class Users {
     if (!party) throw new Error('Fatal: No party found');
 
     const username: string = await Users.generateName(hash);
-    
+    console.log(socketId);
     dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
@@ -74,7 +74,6 @@ export default class Users {
         avatar_url: Users.generateImage(username),
       },
     });
-
     return party;
   }
 

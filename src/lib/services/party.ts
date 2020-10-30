@@ -63,6 +63,7 @@ export default class Party {
     for (const user of party.users) {
       usernames.push(user.name);
     }
+    console.log(usernames);
     return new Set(usernames);
   }
 
