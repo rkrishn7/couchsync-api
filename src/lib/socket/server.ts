@@ -26,9 +26,8 @@ export default class Manager {
   }
 
   listen() {
-    this.server.on('connection', (socket) => {
-      // Persist the new user
-      UserService.create({
+    this.server.on('connection', async (socket) => {
+      await UserService.create({
         socketId: socket.id,
       });
 

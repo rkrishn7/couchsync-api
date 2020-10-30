@@ -10,6 +10,10 @@ interface GetParams {
   partyHash: string;
 }
 
+interface SearchUsersParams {
+  partyHash: string;
+}
+
 export default class Party {
   static async create({ watchUrl }: CreateParams) {
     const hash = uuidv4();
@@ -42,25 +46,14 @@ export default class Party {
     });
   }
 
-  static async getPartyWithUsers({ partyHash }: GetParams) {
+  static async searchUsers({ partyHash }: SearchUsersParams) {
     return dbClient.parties.findFirst({
       where: {
         hash: partyHash,
       },
-      include: {
+      select: {
         users: true,
       },
     });
-  }
-
-  static async getCurrentUsernames({ partyHash }: GetParams): Promise<Set<string>> {
-    const party = await Party.getPartyWithUsers({
-      partyHash: partyHash,
-    });
-    const usernames: string[] = [];
-    for (const user of party.users) {
-      usernames.push(user.name);
-    }
-    return new Set(usernames);
   }
 }

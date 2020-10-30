@@ -1,6 +1,13 @@
 import dbClient from '@app/database/client';
 import PartyService from '@app/lib/services/party';
-import { adjectives, animals, Config, uniqueNamesGenerator } from 'unique-names-generator';
+import { find } from 'lodash';
+import { stringifyUrl } from 'query-string';
+import {
+  adjectives,
+  animals,
+  Config,
+  uniqueNamesGenerator,
+} from 'unique-names-generator';
 
 interface CreateParams {
   socketId: string;
@@ -15,13 +22,21 @@ interface JoinPartyParams {
   hash: string;
 }
 
+interface GenerateRandomNameParams {
+  partyHash: string;
+}
+
+interface GenerateAvatarParams {
+  userName: string;
+}
+
 export default class Users {
   static async create({ socketId }: CreateParams) {
     const user = await dbClient.users.create({
       data: {
         is_active: true,
         socket_id: socketId,
-        name: "temp",
+        name: 'temp',
       },
     });
 
@@ -51,7 +66,8 @@ export default class Users {
 
     if (!party) throw new Error('Fatal: No party found');
 
-    const username: string = await Users.generateName(hash);
+    const userName = await Users.generateRandomName({ partyHash: hash });
+    const avatarUrl = await Users.generateRandomAvatar({ userName });
     await dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
@@ -65,43 +81,48 @@ export default class Users {
             id: party.id,
           },
         },
-        name: username,
-        avatar_url: Users.generateImage(username),
+        name: userName,
+        avatar_url: avatarUrl,
       },
     });
     return party;
   }
 
-  private static generateImage(userName: string): string {
-    /*
-     * GET Options
-     * r : radius of icon 
-     * m : margin of icon
-     * b : background color - 24 bit rgb
-     * w : width of icon
-     * h : height of icon
-     * colorLevel : brightness of color
-     * 
-     * EX: ?r=4&m=2&b=%23b99d9d&w=1&h=1&colorLevel=800
+  private static generateRandomAvatar({ userName }: GenerateAvatarParams) {
+    /**
+     * List of options:
+     * @see https://avatars.dicebear.com/
+     * Or check out the README of the sprite collection
      */
-    const options = ""; // I'm leaving this blank for now, but we'll want to add options so the image fits nicely in the chat window
-    const baseUrl = "https://avatars.dicebear.com/api/identicon/";
-    return baseUrl + encodeURIComponent(userName) + ".svg" + options;
+    const options = {};
+    const spriteType = 'gridy';
+    const apiUrl = `https://avatars.dicebear.com/api/${spriteType}/${encodeURIComponent(
+      userName
+    )}.svg`;
+
+    return stringifyUrl({
+      url: apiUrl,
+      query: options,
+    });
   }
 
-  private static async generateName(partyHash: string): Promise<string> {
-    const set: Set<string> = await PartyService.getCurrentUsernames({partyHash});
+  private static async generateRandomName({
+    partyHash,
+  }: GenerateRandomNameParams) {
+    const { users } = await PartyService.searchUsers({ partyHash });
+
     const nameConfig: Config = {
       dictionaries: [adjectives, animals],
       separator: ' ',
       style: 'capital',
       length: 2,
     };
+
     let randName: string;
     do {
       randName = uniqueNamesGenerator(nameConfig);
-    } while (set.has(randName));
-    console.log("New name:", randName);
+    } while (find(users, (u) => u.name === randName));
+
     return randName;
   }
 }
