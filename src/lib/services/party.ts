@@ -10,6 +10,10 @@ interface GetParams {
   partyHash: string;
 }
 
+interface SearchUsersParams {
+  partyHash: string;
+}
+
 export default class Party {
   static async create({ watchUrl }: CreateParams) {
     const hash = uuidv4();
@@ -38,6 +42,17 @@ export default class Party {
     return dbClient.parties.findFirst({
       where: {
         hash: partyHash,
+      },
+    });
+  }
+
+  static async searchUsers({ partyHash }: SearchUsersParams) {
+    return dbClient.parties.findFirst({
+      where: {
+        hash: partyHash,
+      },
+      select: {
+        users: true,
       },
     });
   }
