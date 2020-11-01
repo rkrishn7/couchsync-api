@@ -2,7 +2,7 @@ import settings from '@app/lib/settings';
 import mysql from 'mysql';
 
 const connection = mysql.createConnection({
-  user: settings.DB_USERNAME,
+  user: settings.DB_USER,
   password: settings.DB_PASSWORD,
 });
 
