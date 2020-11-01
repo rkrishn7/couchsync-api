@@ -17,6 +17,14 @@ export default class Messages {
       where: {
         party_id: partyId,
       },
+      include: {
+        users: {
+          select: {
+            name: true,
+            avatar_url: true,
+          },
+        },
+      },
     });
 
     // TODO: add extra layer of security
@@ -53,6 +61,12 @@ export default class Messages {
       },
     });
 
-    return newMessage;
+    return {
+      ...newMessage,
+      user: {
+        name: user.name,
+        avatar_url: user.avatar_url,
+      },
+    };
   }
 }

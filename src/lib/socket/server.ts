@@ -1,5 +1,6 @@
 import { Server } from 'http';
 
+import { Party, User } from '@app/lib/models';
 import MessageService from '@app/lib/services/messages';
 import UserService from '@app/lib/services/users';
 import { Message } from '@app/lib/types';
@@ -49,9 +50,9 @@ export default class Manager {
   async onSocketJoinParty(
     this: io.Socket,
     data: { partyHash: string },
-    ack: (data: { party: any }) => void
+    ack: (data: { party: Party; user: User }) => void
   ) {
-    const party = await UserService.joinParty({
+    const { party, user } = await UserService.joinParty({
       hash: data.partyHash,
       socketId: this.id,
     });
@@ -59,6 +60,7 @@ export default class Manager {
     this.join(party.hash, () =>
       ack({
         party,
+        user,
       })
     );
   }
