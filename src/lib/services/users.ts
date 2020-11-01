@@ -32,10 +32,10 @@ interface GenerateAvatarParams {
 
 export default class Users {
   static async create({ socketId }: CreateParams) {
-    const user = await dbClient.users.create({
+    const user = await dbClient.user.create({
       data: {
-        is_active: true,
-        socket_id: socketId,
+        isActive: true,
+        socketId,
         name: 'temp',
       },
     });
@@ -44,21 +44,41 @@ export default class Users {
   }
 
   static async deactivate({ socketId }: DeactivateParams) {
-    await dbClient.users.update({
+    const { partyId } = await dbClient.user.findFirst({
+      where: {
+        socketId,
+        isActive: true,
+      },
+      select: {
+        partyId: true,
+      },
+    });
+
+    const userUpdate = dbClient.user.update({
       where: {
         socket_id_is_active_unique: {
-          socket_id: socketId,
-          is_active: true,
+          socketId,
+          isActive: true,
         },
       },
       data: {
-        is_active: false,
+        isActive: false,
       },
     });
+
+    /**
+     * Use tagged template literals to avoid SQL injection
+     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
+     */
+    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET member_count = member_count - 1, is_active = member_count > 0 WHERE id = ${partyId};`;
+
+    await dbClient.$transaction(
+      [userUpdate, partyId && partyUpdate].filter(Boolean) as any
+    );
   }
 
   static async joinParty({ hash, socketId }: JoinPartyParams) {
-    const party = await dbClient.parties.findOne({
+    const party = await dbClient.party.findOne({
       where: {
         hash,
       },
@@ -67,25 +87,33 @@ export default class Users {
     if (!party) throw new Error('Fatal: No party found');
 
     const userName = await Users.generateRandomName({ partyHash: hash });
-    const avatarUrl = await Users.generateRandomAvatar({ userName });
+    const avatarUrl = Users.generateRandomAvatar({ userName });
 
-    const user = await dbClient.users.update({
+    const userUpdate = dbClient.user.update({
       where: {
         socket_id_is_active_unique: {
-          socket_id: socketId,
-          is_active: true,
+          socketId,
+          isActive: true,
         },
       },
       data: {
-        parties: {
+        party: {
           connect: {
             id: party.id,
           },
         },
         name: userName,
-        avatar_url: avatarUrl,
+        avatarUrl,
       },
     });
+
+    /**
+     * Use tagged template literals to avoid SQL injection
+     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
+     */
+    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET is_active = true, member_count = member_count + 1 WHERE id = ${party.id};`;
+
+    const [user] = await dbClient.$transaction([userUpdate, partyUpdate]);
 
     return {
       user,

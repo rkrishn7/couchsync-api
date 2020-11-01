@@ -1,4 +1,5 @@
 import dbClient from '@app/database/client';
+import { pick } from 'lodash';
 import { stringifyUrl } from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -24,30 +25,27 @@ export default class Party {
       },
     });
 
-    const record = await dbClient.parties.create({
+    const newParty = await dbClient.party.create({
       data: {
         hash,
-        join_url: joinUrl,
+        joinUrl,
       },
     });
 
-    return {
-      hash,
-      join_url: joinUrl,
-      id: record.id,
-    };
+    return pick(newParty, ['hash', 'joinUrl', 'id']);
   }
 
-  static async get({ partyHash }: GetParams) {
-    return dbClient.parties.findFirst({
+  static async getActiveParty({ partyHash }: GetParams) {
+    return dbClient.party.findFirst({
       where: {
         hash: partyHash,
+        isActive: true,
       },
     });
   }
 
   static async searchUsers({ partyHash }: SearchUsersParams) {
-    return dbClient.parties.findFirst({
+    return dbClient.party.findFirst({
       where: {
         hash: partyHash,
       },
