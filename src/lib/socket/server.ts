@@ -3,7 +3,7 @@ import { Server } from 'http';
 import { Party, User } from '@app/lib/models';
 import MessageService from '@app/lib/services/messages';
 import UserService from '@app/lib/services/users';
-import { Message } from '@app/lib/types';
+import { Message, VideoEvent } from '@app/lib/types';
 import io from 'socket.io';
 
 import { SocketEvents } from './events';
@@ -23,6 +23,7 @@ export default class Manager {
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
+      [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
     ];
   }
 
@@ -93,4 +94,12 @@ export default class Manager {
       messages,
     });
   }
+
+  onSocketVideoEvent(
+    this: io.Socket,
+    data: VideoEvent,
+  ) {
+    this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
+  }
+
 }
