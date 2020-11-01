@@ -68,7 +68,8 @@ export default class Users {
 
     const userName = await Users.generateRandomName({ partyHash: hash });
     const avatarUrl = await Users.generateRandomAvatar({ userName });
-    await dbClient.users.update({
+
+    const user = await dbClient.users.update({
       where: {
         socket_id_is_active_unique: {
           socket_id: socketId,
@@ -85,7 +86,11 @@ export default class Users {
         avatar_url: avatarUrl,
       },
     });
-    return party;
+
+    return {
+      user,
+      party,
+    };
   }
 
   private static generateRandomAvatar({ userName }: GenerateAvatarParams) {
