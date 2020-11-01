@@ -14,8 +14,14 @@ Make sure you have the following in your `.env`
 
 ```
 DB_NAME
-DB_USERNAME
+DB_USER
 DB_PASSWORD
+```
+
+And in `prisma/.env`
+
+```
+DATABASE_URL
 ```
 
 ### Creating the Database
