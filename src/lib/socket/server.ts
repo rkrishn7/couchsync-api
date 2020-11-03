@@ -22,7 +22,8 @@ export default class Manager {
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
-      [SocketEvents.URL_CHANGE, this.onURLChange]
+      [SocketEvents.URL_CHANGE, this.onURLChange],
+      [SocketEvents.USER_LOADED, this.onUserLoad]
     ];
   }
 
@@ -101,4 +102,10 @@ export default class Manager {
     this.to(data.partyHash).emit(SocketEvents.URL_CHANGE, { data } );
   }
   
+  onUserLoad(
+    this: io.Socket,
+    data: { partyHash: string }
+  ) {
+    this.to(data.partyHash).emit(SocketEvents.USER_LOADED, { data });
+  }
 }

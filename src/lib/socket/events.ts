@@ -5,4 +5,5 @@ export enum SocketEvents {
   NEW_MESSAGE = 'new_message',
   GET_MESSAGES = 'get_messages',
   URL_CHANGE = 'url_change',
+  USER_LOADED = 'user_loaded',
 }
