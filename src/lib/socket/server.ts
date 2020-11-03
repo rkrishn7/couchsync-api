@@ -50,6 +50,19 @@ export default class Manager {
     if (user.party?.hash)
       this.to(user.party.hash).emit(SocketEvents.USER_LEFT_PARTY, { user });
     if (newHost) {
+      // TODO: Find an actual way to send a system message
+      const newHostMessage = {
+        user: {
+          name: 'couchsync',
+          avatarUrl: 'https://avatars.dicebear.com/api/bottts/couchs.svg',
+        },
+        content: `${newHost.name} has been promoted to the host!`,
+        id: 0,
+        userId: 0,
+      };
+      this.in(user.party.hash).emit(SocketEvents.NEW_MESSAGE, {
+        message: newHostMessage,
+      });
       this.in(user.party.hash).emit(SocketEvents.NEW_HOST, { user: newHost });
     }
   }

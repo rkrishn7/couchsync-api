@@ -127,7 +127,7 @@ export default class Users {
     const userName = await Users.generateRandomName({ partyHash: hash });
     const avatarUrl = Users.generateRandomAvatar({ userName });
 
-    const userAndPartyWithUsers = await dbClient.user.update({
+    const userAndPartyWithActiveUsers = await dbClient.user.update({
       where: {
         socket_id_is_active_unique: {
           socketId,
@@ -154,14 +154,18 @@ export default class Users {
       include: {
         party: {
           include: {
-            users: true,
+            users: {
+              where: {
+                isActive: true,
+              },
+            },
           },
         },
       },
     });
 
     return {
-      user: userAndPartyWithUsers,
+      user: userAndPartyWithActiveUsers,
     };
   }
 
