@@ -18,7 +18,7 @@ router.post(
     const newUserName = req.body;
 
     await UserService.changeName(newUserName);
-
+    console.log("set new name", newUserName);
     return res.status(StatusCodes.OK);
   }
 );
