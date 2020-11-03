@@ -1,8 +1,9 @@
 import { Server } from 'http';
 
+import { Party, User } from '@app/lib/models';
 import MessageService from '@app/lib/services/messages';
 import UserService from '@app/lib/services/users';
-import { Message } from '@app/lib/types';
+import { Message, VideoEvent } from '@app/lib/types';
 import io from 'socket.io';
 
 import { SocketEvents } from './events';
@@ -23,14 +24,14 @@ export default class Manager {
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
       [SocketEvents.URL_CHANGE, this.onURLChange],
-      [SocketEvents.USER_LOADED, this.onUserLoad]
+      [SocketEvents.USER_LOADED, this.onUserLoad],
+      [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
     ];
   }
 
   listen() {
-    this.server.on('connection', (socket) => {
-      // Persist the new user
-      UserService.create({
+    this.server.on('connection', async (socket) => {
+      await UserService.create({
         socketId: socket.id,
       });
 
@@ -52,9 +53,9 @@ export default class Manager {
   async onSocketJoinParty(
     this: io.Socket,
     data: { partyHash: string },
-    ack: (data: { party: any }) => void
+    ack: (data: { party: Party; user: User }) => void
   ) {
-    const party = await UserService.joinParty({
+    const { party, user } = await UserService.joinParty({
       hash: data.partyHash,
       socketId: this.id,
     });
@@ -62,6 +63,7 @@ export default class Manager {
     this.join(party.hash, () =>
       ack({
         party,
+        user,
       })
     );
   }
@@ -108,4 +110,11 @@ export default class Manager {
   ) {
     this.to(data.partyHash).emit(SocketEvents.USER_LOADED, { data });
   }
+  onSocketVideoEvent(
+    this: io.Socket,
+    data: VideoEvent,
+  ) {
+    this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
+  }
+
 }

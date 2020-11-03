@@ -2,6 +2,7 @@ import { URL_REGEX } from '@app/lib/constants/regex';
 import PartyService from '@app/lib/services/party';
 import { validate } from '@app/lib/utils/middleware';
 import { Request, Response, Router } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import Joi from 'joi';
 
 const router = Router();
@@ -15,11 +16,17 @@ router.get(
     'query'
   ),
   async (req: Request, res: Response) => {
-    const party = await PartyService.get({
+    const party = await PartyService.getActiveParty({
       partyHash: req.query.partyHash as string,
     });
 
-    return res.status(200).json(party);
+    if (!party)
+      return res.status(StatusCodes.GONE).json({
+        error_message:
+          "Whoops! It looks like this party isn't available anymore.",
+      });
+
+    return res.status(StatusCodes.OK).json(party);
   }
 );
 
@@ -31,12 +38,11 @@ router.post(
     })
   ),
   async (req: Request, res: Response) => {
-    // The init data consists of the watch url
     const partyInitData = req.body;
 
     const party = await PartyService.create(partyInitData);
 
-    return res.status(200).json(party);
+    return res.status(StatusCodes.OK).json(party);
   }
 );
 

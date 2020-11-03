@@ -2,7 +2,7 @@
   "dev": {
     "driver": "mysql",
     "user": {
-      "ENV": "DB_USERNAME"
+      "ENV": "DB_USER"
     },
     "password": {
       "ENV": "DB_PASSWORD"

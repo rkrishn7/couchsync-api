@@ -13,9 +13,17 @@ interface CreateParams {
 
 export default class Messages {
   static async search({ partyId }: SearchParams) {
-    const messages = await dbClient.messages.findMany({
+    const messages = await dbClient.message.findMany({
       where: {
-        party_id: partyId,
+        partyId,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
 
@@ -27,32 +35,38 @@ export default class Messages {
   }
 
   static async create({ partyId, content, sentAt, socketId }: CreateParams) {
-    const user = await dbClient.users.findFirst({
+    const user = await dbClient.user.findFirst({
       where: {
-        socket_id: socketId,
-        is_active: true,
+        socketId,
+        isActive: true,
       },
     });
 
     if (!user) throw new Error('Fatal: Invalid User');
 
-    const newMessage = await dbClient.messages.create({
+    const newMessage = await dbClient.message.create({
       data: {
-        parties: {
+        party: {
           connect: {
             id: partyId,
           },
         },
-        users: {
+        user: {
           connect: {
             id: user.id,
           },
         },
         content,
-        sent_at: sentAt,
+        sentAt,
       },
     });
 
-    return newMessage;
+    return {
+      ...newMessage,
+      user: {
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+      },
+    };
   }
 }

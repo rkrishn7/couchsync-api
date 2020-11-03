@@ -23,8 +23,14 @@ Make sure you have the following in your `.env`
 
 ```
 DB_NAME
-DB_USERNAME
+DB_USER
 DB_PASSWORD
+```
+
+And in `prisma/.env`
+
+```
+DATABASE_URL
 ```
 
 ### Creating the Database
@@ -42,3 +48,7 @@ To revert a specific migration, run `yarn db:migrate:revert <filename_without_ex
 ### Running Migrations
 
 To run the latest migrations, run `yarn db:migrate`
+
+Some helpful resources for Prisma:
+
+- https://github.com/prisma/docs/issues/800
