@@ -22,6 +22,11 @@ interface JoinPartyParams {
   hash: string;
 }
 
+interface ChangeUserNameParams {
+  newUserName: string;
+  socketId: string;
+}
+
 interface GenerateRandomNameParams {
   partyHash: string;
 }
@@ -75,6 +80,20 @@ export default class Users {
     await dbClient.$transaction(
       [userUpdate, partyId && partyUpdate].filter(Boolean) as any
     );
+  }
+
+  static async changeName({ newUserName, socketId }: ChangeUserNameParams) {
+    await dbClient.user.update({
+      where: {
+        socket_id_is_active_unique: {
+          socketId,
+          isActive: true,
+        },
+      },
+      data: {
+        name: newUserName,
+      },
+    });
   }
 
   static async joinParty({ hash, socketId }: JoinPartyParams) {
