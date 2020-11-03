@@ -39,7 +39,9 @@ export default class Party {
     return dbClient.party.findFirst({
       where: {
         hash: partyHash,
-        isActive: true,
+        hostId: {
+          not: null,
+        },
       },
     });
   }

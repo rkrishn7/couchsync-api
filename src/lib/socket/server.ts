@@ -43,9 +43,15 @@ export default class Manager {
 
   async onSocketDisconnect(this: io.Socket) {
     console.log('socket', this.id, 'disconnected');
-    await UserService.deactivate({
+    const { user, newHost } = await UserService.deactivate({
       socketId: this.id,
     });
+
+    if (user.party?.hash)
+      this.to(user.party.hash).emit(SocketEvents.USER_LEFT_PARTY, { user });
+    if (newHost) {
+      this.in(user.party.hash).emit(SocketEvents.NEW_HOST, { user: newHost });
+    }
   }
 
   async onSocketJoinParty(
@@ -53,17 +59,19 @@ export default class Manager {
     data: { partyHash: string },
     ack: (data: { party: Party; user: User }) => void
   ) {
-    const { party, user } = await UserService.joinParty({
+    const { user } = await UserService.joinParty({
       hash: data.partyHash,
       socketId: this.id,
     });
 
-    this.join(party.hash, () =>
+    this.join(user.party.hash, () =>
       ack({
-        party,
+        party: user.party,
         user,
       })
     );
+
+    this.to(user.party.hash).emit(SocketEvents.USER_JOINED_PARTY, { user });
   }
 
   async onSocketSendMessage(
@@ -95,11 +103,7 @@ export default class Manager {
     });
   }
 
-  onSocketVideoEvent(
-    this: io.Socket,
-    data: VideoEvent,
-  ) {
+  onSocketVideoEvent(this: io.Socket, data: VideoEvent) {
     this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
   }
-
 }

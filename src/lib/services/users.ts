@@ -44,17 +44,7 @@ export default class Users {
   }
 
   static async deactivate({ socketId }: DeactivateParams) {
-    const { partyId } = await dbClient.user.findFirst({
-      where: {
-        socketId,
-        isActive: true,
-      },
-      select: {
-        partyId: true,
-      },
-    });
-
-    const userUpdate = dbClient.user.update({
+    const userAndPartialParty = await dbClient.user.update({
       where: {
         socket_id_is_active_unique: {
           socketId,
@@ -63,18 +53,66 @@ export default class Users {
       },
       data: {
         isActive: false,
+        hostedParties: {
+          set: [],
+        },
+      },
+      include: {
+        party: {
+          select: {
+            hash: true,
+            host: true,
+          },
+        },
       },
     });
 
-    /**
-     * Use tagged template literals to avoid SQL injection
-     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
-     */
-    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET member_count = member_count - 1, is_active = member_count > 0 WHERE id = ${partyId};`;
+    // If we've removed the host, assign a new one
+    if (!userAndPartialParty.party.host) {
+      const userIds = await dbClient.user.findMany({
+        where: {
+          party: {
+            hash: userAndPartialParty.party.hash,
+          },
+          isActive: true,
+        },
+        select: {
+          id: true,
+        },
+      });
 
-    await dbClient.$transaction(
-      [userUpdate, partyId && partyUpdate].filter(Boolean) as any
-    );
+      if (userIds.length) {
+        // Pick a new host
+        const { id: newHostUserId } = userIds[
+          Math.floor(Math.random() * userIds.length)
+        ];
+
+        const { host: newHost } = await dbClient.party.update({
+          where: {
+            hash: userAndPartialParty.party.hash,
+          },
+          data: {
+            host: {
+              connect: {
+                id: newHostUserId,
+              },
+            },
+          },
+          select: {
+            host: true,
+          },
+        });
+
+        return {
+          newHost,
+          user: userAndPartialParty,
+        };
+      }
+    }
+
+    return {
+      user: userAndPartialParty,
+    };
   }
 
   static async joinParty({ hash, socketId }: JoinPartyParams) {
@@ -89,7 +127,7 @@ export default class Users {
     const userName = await Users.generateRandomName({ partyHash: hash });
     const avatarUrl = Users.generateRandomAvatar({ userName });
 
-    const userUpdate = dbClient.user.update({
+    const userAndPartyWithUsers = await dbClient.user.update({
       where: {
         socket_id_is_active_unique: {
           socketId,
@@ -102,22 +140,28 @@ export default class Users {
             id: party.id,
           },
         },
+        // If there's no host, set as host
+        hostedParties: !party.hostId
+          ? {
+              connect: {
+                hash: party.hash,
+              },
+            }
+          : undefined,
         name: userName,
         avatarUrl,
       },
+      include: {
+        party: {
+          include: {
+            users: true,
+          },
+        },
+      },
     });
 
-    /**
-     * Use tagged template literals to avoid SQL injection
-     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
-     */
-    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET is_active = true, member_count = member_count + 1 WHERE id = ${party.id};`;
-
-    const [user] = await dbClient.$transaction([userUpdate, partyUpdate]);
-
     return {
-      user,
-      party,
+      user: userAndPartyWithUsers,
     };
   }
 
