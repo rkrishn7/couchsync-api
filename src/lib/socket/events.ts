@@ -5,6 +5,7 @@ export enum SocketEvents {
   NEW_MESSAGE = 'new_message',
   GET_MESSAGES = 'get_messages',
   VIDEO_EVENT = 'video_event',
+  CHANGE_NAME = 'change_name',
 }
 
 export enum VideoSocketEvents {

@@ -24,6 +24,7 @@ export default class Manager {
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
       [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
+      [SocketEvents.CHANGE_NAME, this.onSocketChangeName],
     ];
   }
 
@@ -102,4 +103,14 @@ export default class Manager {
     this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
   }
 
+  onSocketChangeName(
+    this: io.Socket,
+    data: { newName: string }
+  ) {
+    console.log('change name event');
+    UserService.changeName({ 
+      newUserName: data.newName, 
+      socketId: this.id
+    });
+  }
 }
