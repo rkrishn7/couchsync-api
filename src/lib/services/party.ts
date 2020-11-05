@@ -1,7 +1,8 @@
-import dbClient from '@app/database/client';
-import { pick } from 'lodash';
+import { query } from 'lib/utils/database/query';
 import { stringifyUrl } from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
+
+import { Service } from './service';
 
 interface CreateParams {
   watchUrl: string;
@@ -11,12 +12,8 @@ interface GetParams {
   partyHash: string;
 }
 
-interface SearchUsersParams {
-  partyHash: string;
-}
-
-export default class Party {
-  static async create({ watchUrl }: CreateParams) {
+export class Party extends Service {
+  async create({ watchUrl }: CreateParams) {
     const hash = uuidv4();
     const joinUrl = stringifyUrl({
       url: watchUrl,
@@ -25,35 +22,56 @@ export default class Party {
       },
     });
 
-    const newParty = await dbClient.party.create({
-      data: {
+    await query(
+      this.connection,
+      `
+      INSERT INTO parties (hash, join_url)
+      VALUES (:hash, :joinUrl)
+    `,
+      {
         hash,
         joinUrl,
-      },
-    });
+      }
+    );
 
-    return pick(newParty, ['hash', 'joinUrl', 'id']);
+    const [newParty]: any = await query(
+      this.connection,
+      `
+      SELECT * FROM parties WHERE hash = :hash
+    `,
+      {
+        hash,
+      }
+    );
+
+    return newParty;
   }
 
-  static async getActiveParty({ partyHash }: GetParams) {
-    return dbClient.party.findFirst({
-      where: {
-        hash: partyHash,
-        hostId: {
-          not: null,
-        },
+  async getActiveParty({ partyHash }: GetParams) {
+    const [{ party, users }]: any = await query(
+      this.connection,
+      {
+        sql: `
+        SELECT * from parties party JOIN users ON users.party_id = party.id
+        WHERE party.hash = :partyHash
+      `,
+        nestTables: true,
       },
-    });
-  }
+      {
+        partyHash,
+      }
+    );
 
-  static async searchUsers({ partyHash }: SearchUsersParams) {
-    return dbClient.party.findFirst({
-      where: {
-        hash: partyHash,
-      },
-      select: {
-        users: true,
+    console.log({
+      party: {
+        ...party,
+        users,
       },
     });
+
+    return {
+      ...party,
+      users: Array.isArray(users) ? users : [users],
+    };
   }
 }

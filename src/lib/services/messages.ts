@@ -1,4 +1,7 @@
-import dbClient from '@app/database/client';
+// import { query } from 'lib/utils/database/query';
+import { transaction } from 'lib/utils/database/transaction';
+
+import { Service } from './service';
 
 interface SearchParams {
   partyId: number;
@@ -11,8 +14,51 @@ interface CreateParams {
   sentAt: Date;
 }
 
-export default class Messages {
-  static async search({ partyId }: SearchParams) {
+export class Messages extends Service {
+  async create({ partyId, content, sentAt, socketId }: CreateParams) {
+    const message = await transaction(this.connection, async (query) => {
+      await query(
+        `
+        INSERT INTO messages (party_id, user_id, content, sent_at)
+        SELECT :partyId, u.id, :content, :sentAt FROM users u WHERE socket_id = :socketId AND is_active = TRUE
+      `,
+        {
+          partyId,
+          content,
+          sentAt: new Date(sentAt),
+          socketId,
+        }
+      );
+
+      const [{ message, user, party }] = await query(
+        {
+          sql: `
+          SELECT * FROM messages message
+          JOIN users user on message.user_id = user.id
+          JOIN parties party on message.party_id = party.id
+          WHERE user.socket_id = :socketId
+          ORDER BY message.id DESC
+        `,
+          nestTables: true,
+        },
+        {
+          socketId,
+        }
+      );
+
+      return {
+        ...message,
+        user,
+        party,
+      };
+    });
+
+    return message;
+  }
+
+  /*static async search({ partyId }: SearchParams) {
+    const messages = await transaction(this.connection, async (query) => {});
+
     const messages = await dbClient.message.findMany({
       where: {
         partyId,
@@ -32,41 +78,5 @@ export default class Messages {
     // party before returning new messages
 
     return { messages };
-  }
-
-  static async create({ partyId, content, sentAt, socketId }: CreateParams) {
-    const user = await dbClient.user.findFirst({
-      where: {
-        socketId,
-        isActive: true,
-      },
-    });
-
-    if (!user) throw new Error('Fatal: Invalid User');
-
-    const newMessage = await dbClient.message.create({
-      data: {
-        party: {
-          connect: {
-            id: partyId,
-          },
-        },
-        user: {
-          connect: {
-            id: user.id,
-          },
-        },
-        content,
-        sentAt,
-      },
-    });
-
-    return {
-      ...newMessage,
-      user: {
-        name: user.name,
-        avatarUrl: user.avatarUrl,
-      },
-    };
-  }
+  }*/
 }
