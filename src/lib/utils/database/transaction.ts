@@ -4,8 +4,9 @@ import { query } from './query';
 
 type Work = (
   query: (
-    opts: QueryOptions | string,
-    params: Record<string, any>
+    sql: string,
+    params: Record<string, any>,
+    opts?: Omit<QueryOptions, 'sql'>
   ) => Promise<any>
 ) => Promise<any>;
 
@@ -13,8 +14,8 @@ export const transaction = async (connection: Connection, work: Work) => {
   await connection.beginTransaction();
 
   try {
-    const result = await work((opts, params) =>
-      query(connection, opts, params)
+    const result = await work((sql, params, opts) =>
+      query(connection, sql, params, opts)
     );
     await connection.commit();
     return result;

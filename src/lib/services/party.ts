@@ -25,21 +25,21 @@ export class Party extends Service {
     await query(
       this.connection,
       `
-      INSERT INTO parties (hash, join_url)
-      VALUES (:hash, :joinUrl)
-    `,
+        INSERT INTO parties (hash, join_url)
+        VALUES (:hash, :joinUrl)
+      `,
       {
         hash,
         joinUrl,
       }
     );
 
-    const [newParty]: any = await query(
+    const [{ parties: newParty }]: any = await query(
       this.connection,
       `
-      SELECT * FROM parties WHERE hash = :hash
-      LIMIT 1
-    `,
+        SELECT * FROM parties WHERE hash = :hash
+        LIMIT 1
+      `,
       {
         hash,
       }
@@ -51,13 +51,10 @@ export class Party extends Service {
   async getActiveParty({ partyHash }: GetParams) {
     const results: any = await query(
       this.connection,
-      {
-        sql: `
+      `
         SELECT * from parties party JOIN users ON users.party_id = party.id
         WHERE party.hash = :partyHash AND users.is_active
       `,
-        nestTables: true,
-      },
       {
         partyHash,
       }

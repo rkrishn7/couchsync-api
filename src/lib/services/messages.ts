@@ -1,11 +1,6 @@
-// import { query } from 'lib/utils/database/query';
 import { transaction } from 'lib/utils/database/transaction';
 
 import { Service } from './service';
-
-interface SearchParams {
-  partyId: number;
-}
 
 interface CreateParams {
   socketId: string;
@@ -19,9 +14,9 @@ export class Messages extends Service {
     const message = await transaction(this.connection, async (query) => {
       await query(
         `
-        INSERT INTO messages (party_id, user_id, content, sent_at)
-        SELECT :partyId, u.id, :content, :sentAt FROM users u WHERE socket_id = :socketId AND is_active = TRUE
-      `,
+          INSERT INTO messages (party_id, user_id, content, sent_at)
+          SELECT :partyId, u.id, :content, :sentAt FROM users u WHERE socket_id = :socketId AND is_active = TRUE
+        `,
         {
           partyId,
           content,
@@ -31,8 +26,7 @@ export class Messages extends Service {
       );
 
       const [{ message, user, party }] = await query(
-        {
-          sql: `
+        `
           SELECT * FROM messages message
           JOIN users user on message.user_id = user.id
           JOIN parties party on message.party_id = party.id
@@ -40,8 +34,6 @@ export class Messages extends Service {
           ORDER BY message.id DESC
           LIMIT 1
         `,
-          nestTables: true,
-        },
         {
           socketId,
         }
