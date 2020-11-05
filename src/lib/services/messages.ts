@@ -38,6 +38,7 @@ export class Messages extends Service {
           JOIN parties party on message.party_id = party.id
           WHERE user.socket_id = :socketId
           ORDER BY message.id DESC
+          LIMIT 1
         `,
           nestTables: true,
         },

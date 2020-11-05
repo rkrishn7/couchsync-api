@@ -38,6 +38,7 @@ export class Party extends Service {
       this.connection,
       `
       SELECT * FROM parties WHERE hash = :hash
+      LIMIT 1
     `,
       {
         hash,
@@ -48,12 +49,12 @@ export class Party extends Service {
   }
 
   async getActiveParty({ partyHash }: GetParams) {
-    const [{ party, users }]: any = await query(
+    const results: any = await query(
       this.connection,
       {
         sql: `
         SELECT * from parties party JOIN users ON users.party_id = party.id
-        WHERE party.hash = :partyHash
+        WHERE party.hash = :partyHash AND users.is_active
       `,
         nestTables: true,
       },
@@ -62,16 +63,12 @@ export class Party extends Service {
       }
     );
 
-    console.log({
-      party: {
-        ...party,
-        users,
-      },
-    });
+    const { party } = results[0];
+    const users = results.map((r: any) => r.users);
 
     return {
       ...party,
-      users: Array.isArray(users) ? users : [users],
+      users,
     };
   }
 }

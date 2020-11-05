@@ -35,6 +35,7 @@ export class Users extends Service {
         {
           sql: `
           SELECT * FROM users WHERE socket_id = :socketId AND is_active = TRUE
+          LIMIT 1
         `,
         },
         {
@@ -87,7 +88,7 @@ export class Users extends Service {
          * we need to re-assign a new host
          */
         if (user.party?.hash && !user.host?.id) {
-          let [userIds]: any[] = await query(
+          const userIds: any[] = await query(
             {
               sql: `
               SELECT users.id FROM users JOIN parties ON users.party_id = parties.id
@@ -98,8 +99,6 @@ export class Users extends Service {
               partyHash: user.party.hash,
             }
           );
-
-          if (userIds) userIds = Array.isArray(userIds) ? userIds : [userIds];
 
           if (userIds?.length) {
             const { id: newHostUserId } = userIds[
@@ -221,7 +220,7 @@ export class Users extends Service {
         ...user,
         party: {
           ...party,
-          users: Array.isArray(partyUsers) ? partyUsers : [partyUsers],
+          users: partyUsers,
         },
       },
     };
