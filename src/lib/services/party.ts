@@ -1,7 +1,8 @@
-import dbClient from '@app/database/client';
-import { pick } from 'lodash';
+import { query } from 'lib/utils/database/query';
 import { stringifyUrl } from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
+
+import { Service } from './service';
 
 interface CreateParams {
   watchUrl: string;
@@ -11,12 +12,8 @@ interface GetParams {
   partyHash: string;
 }
 
-interface SearchUsersParams {
-  partyHash: string;
-}
-
-export default class Party {
-  static async create({ watchUrl }: CreateParams) {
+export class Party extends Service {
+  async create({ watchUrl }: CreateParams) {
     const hash = uuidv4();
     const joinUrl = stringifyUrl({
       url: watchUrl,
@@ -25,33 +22,50 @@ export default class Party {
       },
     });
 
-    const newParty = await dbClient.party.create({
-      data: {
+    await query(
+      this.connection,
+      `
+        INSERT INTO parties (hash, join_url)
+        VALUES (:hash, :joinUrl)
+      `,
+      {
         hash,
         joinUrl,
-      },
-    });
+      }
+    );
 
-    return pick(newParty, ['hash', 'joinUrl', 'id']);
+    const [{ parties: newParty }]: any = await query(
+      this.connection,
+      `
+        SELECT * FROM parties WHERE hash = :hash
+        LIMIT 1
+      `,
+      {
+        hash,
+      }
+    );
+
+    return newParty;
   }
 
-  static async getActiveParty({ partyHash }: GetParams) {
-    return dbClient.party.findFirst({
-      where: {
-        hash: partyHash,
-        isActive: true,
-      },
-    });
-  }
+  async getActiveParty({ partyHash }: GetParams) {
+    const results: any = await query(
+      this.connection,
+      `
+        SELECT * from parties party JOIN users ON users.party_id = party.id
+        WHERE party.hash = :partyHash AND users.is_active
+      `,
+      {
+        partyHash,
+      }
+    );
 
-  static async searchUsers({ partyHash }: SearchUsersParams) {
-    return dbClient.party.findFirst({
-      where: {
-        hash: partyHash,
-      },
-      select: {
-        users: true,
-      },
-    });
+    const { party } = results[0];
+    const users = results.map((r: any) => r.users);
+
+    return {
+      ...party,
+      users,
+    };
   }
 }

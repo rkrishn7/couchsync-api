@@ -1,5 +1,4 @@
 import { URL_REGEX } from '@app/lib/constants/regex';
-import PartyService from '@app/lib/services/party';
 import { validate } from '@app/lib/utils/middleware';
 import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
@@ -16,7 +15,7 @@ router.get(
     'query'
   ),
   async (req: Request, res: Response) => {
-    const party = await PartyService.getActiveParty({
+    const party = await req.services.party.getActiveParty({
       partyHash: req.query.partyHash as string,
     });
 
@@ -40,7 +39,7 @@ router.post(
   async (req: Request, res: Response) => {
     const partyInitData = req.body;
 
-    const party = await PartyService.create(partyInitData);
+    const party = await req.services.party.create(partyInitData);
 
     return res.status(StatusCodes.OK).json(party);
   }

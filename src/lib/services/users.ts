@@ -1,13 +1,7 @@
-import dbClient from '@app/database/client';
-import PartyService from '@app/lib/services/party';
-import { find } from 'lodash';
-import { stringifyUrl } from 'query-string';
-import {
-  adjectives,
-  animals,
-  Config,
-  uniqueNamesGenerator,
-} from 'unique-names-generator';
+import { transaction } from 'lib/utils/database/transaction';
+import { generateRandomAvatar, generateRandomName } from 'lib/utils/users';
+
+import { Service } from './service';
 
 interface CreateParams {
   socketId: string;
@@ -22,140 +16,185 @@ interface JoinPartyParams {
   hash: string;
 }
 
-interface GenerateRandomNameParams {
-  partyHash: string;
-}
+export class Users extends Service {
+  async create({ socketId }: CreateParams) {
+    const user = await transaction(this.connection, async (query) => {
+      await query(
+        `
+          INSERT INTO users (socket_id, is_active)
+          VALUES (:socketId, TRUE)
+        `,
+        { socketId }
+      );
 
-interface GenerateAvatarParams {
-  userName: string;
-}
+      const [{ users: user }] = await query(
+        `
+          SELECT * FROM users WHERE socket_id = :socketId AND is_active = TRUE
+          LIMIT 1
+        `,
+        { socketId }
+      );
 
-export default class Users {
-  static async create({ socketId }: CreateParams) {
-    const user = await dbClient.user.create({
-      data: {
-        isActive: true,
-        socketId,
-        name: 'temp',
-      },
+      return user;
     });
-
-    return user;
-  }
-
-  static async deactivate({ socketId }: DeactivateParams) {
-    const { partyId } = await dbClient.user.findFirst({
-      where: {
-        socketId,
-        isActive: true,
-      },
-      select: {
-        partyId: true,
-      },
-    });
-
-    const userUpdate = dbClient.user.update({
-      where: {
-        socket_id_is_active_unique: {
-          socketId,
-          isActive: true,
-        },
-      },
-      data: {
-        isActive: false,
-      },
-    });
-
-    /**
-     * Use tagged template literals to avoid SQL injection
-     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
-     */
-    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET member_count = member_count - 1, is_active = member_count > 0 WHERE id = ${partyId};`;
-
-    await dbClient.$transaction(
-      [userUpdate, partyId && partyUpdate].filter(Boolean) as any
-    );
-  }
-
-  static async joinParty({ hash, socketId }: JoinPartyParams) {
-    const party = await dbClient.party.findOne({
-      where: {
-        hash,
-      },
-    });
-
-    if (!party) throw new Error('Fatal: No party found');
-
-    const userName = await Users.generateRandomName({ partyHash: hash });
-    const avatarUrl = Users.generateRandomAvatar({ userName });
-
-    const userUpdate = dbClient.user.update({
-      where: {
-        socket_id_is_active_unique: {
-          socketId,
-          isActive: true,
-        },
-      },
-      data: {
-        party: {
-          connect: {
-            id: party.id,
-          },
-        },
-        name: userName,
-        avatarUrl,
-      },
-    });
-
-    /**
-     * Use tagged template literals to avoid SQL injection
-     * @see https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access#sql-injection
-     */
-    const partyUpdate = dbClient.$executeRaw`UPDATE parties SET is_active = true, member_count = member_count + 1 WHERE id = ${party.id};`;
-
-    const [user] = await dbClient.$transaction([userUpdate, partyUpdate]);
 
     return {
       user,
-      party,
     };
   }
 
-  private static generateRandomAvatar({ userName }: GenerateAvatarParams) {
-    /**
-     * List of options:
-     * @see https://avatars.dicebear.com/
-     * Or check out the README of the sprite collection
-     */
-    const options = {};
-    const spriteType = 'gridy';
-    const apiUrl = `https://avatars.dicebear.com/api/${spriteType}/${encodeURIComponent(
-      userName
-    )}.svg`;
+  async deactivate({ socketId }: DeactivateParams) {
+    const { newHost, user } = await transaction(
+      this.connection,
+      async (query) => {
+        await query(
+          `
+            UPDATE users u LEFT JOIN parties p ON u.id = p.host_id
+            SET u.is_active = FALSE, p.host_id = NULL
+            WHERE u.socket_id = :socketId AND u.is_active = TRUE
+          `,
+          { socketId }
+        );
 
-    return stringifyUrl({
-      url: apiUrl,
-      query: options,
-    });
+        const [user] = await query(
+          `
+            SELECT user.*, party.*, host.* FROM users user
+            LEFT JOIN parties party ON user.party_id = party.id
+            LEFT JOIN users host ON host.id = party.host_id
+            WHERE user.socket_id = :socketId AND user.is_active = FALSE
+          `,
+          { socketId }
+        );
+
+        /**
+         * If the user was in a party and there is no host,
+         * we need to re-assign a new host
+         */
+        if (user.party?.hash && !user.host?.id) {
+          const userIds: any[] = await query(
+            `
+              SELECT users.id FROM users JOIN parties ON users.party_id = parties.id
+              WHERE parties.hash = :partyHash AND users.is_active = TRUE
+            `,
+            {
+              partyHash: user.party.hash,
+            }
+          );
+
+          if (userIds?.length) {
+            const {
+              users: { id: newHostUserId },
+            } = userIds[Math.floor(Math.random() * userIds.length)];
+
+            await query(
+              `
+                UPDATE parties p SET host_id = :hostId WHERE p.hash = :partyHash
+              `,
+              {
+                hostId: newHostUserId,
+                partyHash: user.party.hash,
+              }
+            );
+
+            const [{ host: newHost }] = await query(
+              `
+                SELECT host.* FROM parties p JOIN users host on p.host_id = host.id
+                WHERE p.hash = :partyHash
+              `,
+              {
+                partyHash: user.party.hash,
+              }
+            );
+
+            return {
+              newHost,
+              user,
+            };
+          }
+        }
+
+        return {
+          user,
+        };
+      }
+    );
+
+    return {
+      newHost,
+      user: {
+        ...user.user,
+        party: {
+          ...user.party,
+          host: user.host,
+        },
+      },
+    };
   }
 
-  private static async generateRandomName({
-    partyHash,
-  }: GenerateRandomNameParams) {
-    const { users } = await PartyService.searchUsers({ partyHash });
+  async joinParty({ hash, socketId }: JoinPartyParams) {
+    const { user, party, partyUsers } = await transaction(
+      this.connection,
+      async (query) => {
+        const [{ parties: userParty }] = await query(
+          `
+            SELECT * FROM parties WHERE hash = :partyHash
+          `,
+          {
+            partyHash: hash,
+          }
+        );
 
-    const nameConfig: Config = {
-      dictionaries: [adjectives, animals],
-      separator: ' ',
-      style: 'capital',
-      length: 2,
+        const userName = generateRandomName();
+        const avatarUrl = generateRandomAvatar({ userName });
+
+        if (!userParty) {
+          throw new Error('Fatal: No party found');
+        }
+
+        await query(
+          `
+            UPDATE users JOIN parties ON parties.id = :partyId
+            SET name = :userName, avatar_url = :avatarUrl, party_id = :partyId,
+            parties.host_id = CASE WHEN parties.host_id IS NULL THEN users.id ELSE parties.host_id END
+            WHERE users.socket_id = :socketId AND users.is_active = TRUE
+          `,
+          {
+            partyId: userParty.id,
+            userName,
+            avatarUrl,
+            socketId,
+          }
+        );
+
+        const results = await query(
+          `
+            SELECT * FROM users user
+            JOIN parties party ON party.id = user.party_id
+            LEFT JOIN users partyUsers ON partyUsers.party_id = party.id AND partyUsers.is_active = TRUE
+            WHERE user.socket_id = :socketId
+          `,
+          { socketId }
+        );
+
+        const { user, party } = results[0];
+        const partyUsers = results.map((u: any) => u.partyUsers);
+
+        return {
+          user,
+          party,
+          partyUsers,
+        };
+      }
+    );
+
+    return {
+      user: {
+        ...user,
+        party: {
+          ...party,
+          users: partyUsers,
+        },
+      },
     };
-
-    let randName: string;
-    do {
-      randName = uniqueNamesGenerator(nameConfig);
-    } while (find(users, (u) => u.name === randName));
-
-    return randName;
   }
 }

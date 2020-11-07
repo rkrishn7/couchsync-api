@@ -5,6 +5,9 @@ export enum SocketEvents {
   NEW_MESSAGE = 'new_message',
   GET_MESSAGES = 'get_messages',
   VIDEO_EVENT = 'video_event',
+  USER_JOINED_PARTY = 'user_joined_party',
+  USER_LEFT_PARTY = 'user_left_party',
+  NEW_HOST = 'new_host',
 }
 
 export enum VideoSocketEvents {
