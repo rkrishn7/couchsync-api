@@ -22,7 +22,7 @@ const main = () => {
 
   const { PORT, STAGE } = settings;
 
-  new socketManager(httpServer).listen();
+  socketManager.listen(httpServer);
   httpServer.listen(PORT, () =>
     console.log(`Server started in ${STAGE} mode. Listening on port ${PORT}`)
   );

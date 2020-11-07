@@ -6,16 +6,14 @@ import io, { Socket } from 'socket.io';
 
 import { SocketEvents } from './events';
 
-export default class Manager {
-  readonly server!: io.Server;
+class Manager {
+  server!: io.Server;
   readonly events!: [
     string,
     (data: Record<string, any>, ack?: (data: any) => void) => void
   ][];
 
-  constructor(httpServer: Server) {
-    this.server = io(httpServer);
-
+  constructor() {
     this.events = [
       [SocketEvents.DISCONNECT, this.onSocketDisconnect],
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
@@ -33,7 +31,8 @@ export default class Manager {
     }
   }
 
-  listen() {
+  listen(http: Server) {
+    this.server = io(http);
     this.server.on('connection', async (socket) => {
       console.log('socket', socket.id, 'connected');
 
@@ -134,3 +133,5 @@ export default class Manager {
   }
   */
 }
+
+export default new Manager();
