@@ -7,6 +7,12 @@ interface CreateParams {
   socketId: string;
 }
 
+interface UpdateDisplayDetailsParams {
+  userId: number;
+  name: string;
+  avatarUrl: string;
+}
+
 interface DeactivateParams {
   socketId: string;
 }
@@ -33,6 +39,39 @@ export class Users extends Service {
           LIMIT 1
         `,
         { socketId }
+      );
+
+      return user;
+    });
+
+    return {
+      user,
+    };
+  }
+
+  async updateDisplayDetails({
+    name,
+    userId,
+    avatarUrl,
+  }: UpdateDisplayDetailsParams) {
+    const user = await transaction(this.connection, async (query) => {
+      await query(
+        `
+          UPDATE users SET name = :name, avatar_url = :avatarUrl WHERE id = :userId
+        `,
+        {
+          name,
+          userId,
+          avatarUrl,
+        }
+      );
+
+      const [{ users: user }] = await query(
+        `
+          SELECT * FROM users WHERE id = :userId
+          LIMIT 1
+        `,
+        { userId }
       );
 
       return user;

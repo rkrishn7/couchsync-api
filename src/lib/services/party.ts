@@ -1,3 +1,4 @@
+import { ServiceError } from 'lib/errors/service-error';
 import { query } from 'lib/utils/database/query';
 import { stringifyUrl } from 'query-string';
 import { v4 as uuidv4 } from 'uuid';
@@ -60,7 +61,12 @@ export class Party extends Service {
       }
     );
 
-    const { party } = results[0];
+    const { party } = results[0] || {};
+
+    if (!party) {
+      throw new ServiceError('Unable to find party');
+    }
+
     const users = results.map((r: any) => r.users);
 
     return {

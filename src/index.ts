@@ -1,11 +1,13 @@
 import http from 'http';
 
-import * as controllers from '@app/lib/controllers';
-import settings from '@app/lib/settings';
-import socketManager from '@app/lib/socket/server';
-import { database } from '@app/lib/utils/middleware/database';
 import bodyParser from 'body-parser';
 import express from 'express';
+import 'express-async-errors'; // version locked, need to audit when upgrading express
+import * as controllers from 'lib/controllers';
+import settings from 'lib/settings';
+import socketManager from 'lib/socket/server';
+import { database } from 'lib/utils/middleware/database';
+import { errorHandler } from 'lib/utils/middleware/error';
 import { values } from 'lodash';
 
 const main = () => {
@@ -18,11 +20,13 @@ const main = () => {
   // Register routes
   values(controllers).forEach(({ path, router }) => app.use(path, router));
 
+  app.use(errorHandler);
+
   const httpServer = http.createServer(app);
 
   const { PORT, STAGE } = settings;
 
-  new socketManager(httpServer).listen();
+  socketManager.listen(httpServer);
   httpServer.listen(PORT, () =>
     console.log(`Server started in ${STAGE} mode. Listening on port ${PORT}`)
   );
