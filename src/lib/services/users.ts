@@ -27,6 +27,10 @@ interface ChangeUserNameParams {
   socketId: string;
 }
 
+interface ChangeUserAvatarParams {
+  socketId: string;
+}
+
 interface GenerateRandomNameParams {
   partyHash: string;
 }
@@ -94,6 +98,34 @@ export default class Users {
         name: newUserName,
       },
     });
+  }
+
+  // having this update the database everytime someone wants a new one
+  static async changeAvatar({ socketId }: ChangeUserAvatarParams) {
+    const nameConfig: Config = {
+      dictionaries: [adjectives, animals],
+      separator: ' ',
+      style: 'capital',
+      length: 2,
+    };
+    let randName: string;
+    randName = uniqueNamesGenerator(nameConfig);
+    const avatarUrl = Users.generateRandomAvatar({ userName: randName });
+    await dbClient.user.update({
+      where: {
+        socket_id_is_active_unique: {
+          socketId,
+          isActive: true,
+        },
+      },
+      data: {
+        avatarUrl: avatarUrl,
+      },
+    })
+    console.log("User Service: " + avatarUrl);
+    return {
+      avatarUrl,
+    };
   }
 
   static async joinParty({ hash, socketId }: JoinPartyParams) {

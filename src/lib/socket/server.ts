@@ -25,6 +25,7 @@ export default class Manager {
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
       [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
       [SocketEvents.CHANGE_NAME, this.onSocketChangeName],
+      [SocketEvents.CHANGE_AVATAR, this.onSocketChangeAvatar],
     ];
   }
 
@@ -108,9 +109,25 @@ export default class Manager {
     data: { newName: string }
   ) {
     console.log('change name event');
-    UserService.changeName({ 
-      newUserName: data.newName, 
+    UserService.changeName({
+      newUserName: data.newName,
       socketId: this.id
     });
   }
+
+  // I'm not sure how acks really work and it throws an error with this
+  // I was testing if acks are the way that we send the state back to the client
+  async onSocketChangeAvatar(
+    this: io.Socket,
+    ack: (data: { avatarUrl: string }) => void
+  ) {
+    console.log('change avatar event');
+    const { avatarUrl } = await UserService.changeAvatar({
+      socketId: this.id,
+    });
+    ack({
+      avatarUrl,
+    });
+  }
+
 }
