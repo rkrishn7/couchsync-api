@@ -2,6 +2,7 @@ import http from 'http';
 
 import bodyParser from 'body-parser';
 import express from 'express';
+import 'express-async-errors'; // version locked, need to audit when upgrading express
 import * as controllers from 'lib/controllers';
 import settings from 'lib/settings';
 import socketManager from 'lib/socket/server';

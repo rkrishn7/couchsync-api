@@ -21,10 +21,6 @@ export const query = async (
 
   const results = await connection.query(finalOptions, params);
 
-  if (results[0]) {
-    const formatted = camelCase(results[0], { deep: true });
-    return formatted;
-  }
-
-  return undefined;
+  const formatted = camelCase(results[0], { deep: true });
+  return formatted;
 };
