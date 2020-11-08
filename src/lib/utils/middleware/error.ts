@@ -3,9 +3,9 @@ import { StatusCodes } from 'http-status-codes';
 
 export const errorHandler = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: () => void
+  _next: any
 ) => {
   console.error(err);
   return res
