@@ -6,4 +6,3 @@ test
 coverage
 *.log
 .env
-prisma/.env

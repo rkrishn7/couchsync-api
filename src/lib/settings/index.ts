@@ -2,7 +2,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { PORT, STAGE, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+export enum DebugOptions {
+  DB_POOL = 'DB_POOL',
+}
+
+const {
+  PORT,
+  STAGE,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  DB_HOST,
+  DEBUG,
+} = process.env;
 
 export default {
   PORT,
@@ -10,4 +22,6 @@ export default {
   DB_USER,
   DB_PASSWORD,
   DB_NAME,
+  DB_HOST,
+  DEBUG,
 };

@@ -11,10 +11,8 @@ export const validate = (
   const { error } = schema.validate(req[obj]);
 
   if (error) {
-    const { details } = error;
-    const error_messages = details.map(({ message }) => message);
     return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
-      error_messages,
+      error: 'Unable to process request',
     });
   } else return next();
 };

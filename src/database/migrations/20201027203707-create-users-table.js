@@ -22,7 +22,7 @@ exports.up = function (db) {
       socket_id VARCHAR(100) NOT NULL,
       is_active BOOLEAN,
       party_id INT,
-      name VARCHAR(50) NOT NULL,
+      name VARCHAR(50),
       avatar_url VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

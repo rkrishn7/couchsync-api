@@ -25,6 +25,7 @@
       "error",
       { "allowWholeFile": true }
     ],
+    "@typescript-eslint/no-explicit-any": "off",
     "eslint-comments/no-unused-disable": "error",
     "import/order": [
       "error",

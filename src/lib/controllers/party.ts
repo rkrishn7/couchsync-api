@@ -1,6 +1,5 @@
 import { URL_REGEX } from '@app/lib/constants/regex';
-import PartyService from '@app/lib/services/party';
-import { validate } from '@app/lib/utils/middleware';
+import { validate } from '@app/lib/utils/middleware/validate';
 import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import Joi from 'joi';
@@ -16,15 +15,9 @@ router.get(
     'query'
   ),
   async (req: Request, res: Response) => {
-    const party = await PartyService.getActiveParty({
+    const party = await req.services.party.getActiveParty({
       partyHash: req.query.partyHash as string,
     });
-
-    if (!party)
-      return res.status(StatusCodes.GONE).json({
-        error_message:
-          "Whoops! It looks like this party isn't available anymore.",
-      });
 
     return res.status(StatusCodes.OK).json(party);
   }
@@ -40,7 +33,7 @@ router.post(
   async (req: Request, res: Response) => {
     const partyInitData = req.body;
 
-    const party = await PartyService.create(partyInitData);
+    const party = await req.services.party.create(partyInitData);
 
     return res.status(StatusCodes.OK).json(party);
   }
