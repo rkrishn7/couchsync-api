@@ -100,7 +100,6 @@ export default class Manager {
     this: io.Socket,
     data: { partyHash: string, newUrl: string}
   ) {
-    console.log(data);
     this.to(data.partyHash).emit(SocketEvents.URL_CHANGE, { data } );
   }
   
