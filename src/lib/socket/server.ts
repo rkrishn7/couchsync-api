@@ -24,7 +24,6 @@ export default class Manager {
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
       [SocketEvents.GET_MESSAGES, this.onSocketGetMessages],
       [SocketEvents.URL_CHANGE, this.onURLChange],
-      [SocketEvents.USER_LOADED, this.onUserLoad],
       [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
     ];
   }
@@ -101,15 +100,10 @@ export default class Manager {
     this: io.Socket,
     data: { partyHash: string, newUrl: string}
   ) {
+    console.log(data);
     this.to(data.partyHash).emit(SocketEvents.URL_CHANGE, { data } );
   }
   
-  onUserLoad(
-    this: io.Socket,
-    data: { partyHash: string }
-  ) {
-    this.to(data.partyHash).emit(SocketEvents.USER_LOADED, { data });
-  }
   onSocketVideoEvent(
     this: io.Socket,
     data: VideoEvent,
