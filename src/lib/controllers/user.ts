@@ -3,7 +3,6 @@ import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import Joi from 'joi';
 import { SocketEvents } from 'lib/socket/events';
-import SocketManager from 'lib/socket/server';
 
 const router = Router();
 
@@ -26,7 +25,7 @@ router.put(
       avatarUrl,
     });
 
-    SocketManager.server
+    req.socketServer
       .in(partyHash)
       .emit(SocketEvents.PARTY_USER_UPDATED, { user });
 
