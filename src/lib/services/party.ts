@@ -74,4 +74,17 @@ export class Party extends Service {
       users,
     };
   }
+
+  async updatePartyDetails({ partyHash }: GetParams, { watchUrl }: CreateParams) {
+     await query(
+      this.connection,
+      `
+      UPDATE parties SET join_url = :watchUrl WHERE hash = :partyHash
+      `,
+      {
+        partyHash,
+        watchUrl
+      }
+    );
+  }
 }

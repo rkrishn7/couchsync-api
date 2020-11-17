@@ -6,3 +6,4 @@ test
 coverage
 *.log
 .env
+yarn.lock

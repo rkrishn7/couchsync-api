@@ -3,6 +3,8 @@ import { validate } from '@app/lib/utils/middleware/validate';
 import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import Joi from 'joi';
+import { SocketEvents } from 'lib/socket/events';
+import SocketManager from 'lib/socket/server';
 
 const router = Router();
 
