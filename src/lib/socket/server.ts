@@ -18,7 +18,7 @@ class Manager {
       [SocketEvents.DISCONNECT, this.onSocketDisconnect],
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
-      [SocketEvents.URL_CHANGE, this.onURLChange],
+      [SocketEvents.URL_CHANGE, this.onUrlChange],
       [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
     ];
   }
@@ -119,10 +119,15 @@ class Manager {
     this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
   }
 
-  async onURLChange(this: io.Socket,data: { partyHash: string, newUrl: string}) {
-    await this.request.services.party.updatePartyDetails({
-      partyHash: data.partyHash},
-      {watchUrl: data.newUrl}
+  async onUrlChange(
+    this: io.Socket,
+    { partyHash, newUrl }: { partyHash: string; newUrl: string }
+  ) {
+    await this.request.services.party.updatePartyDetails(
+      {
+        partyHash,
+      },
+      { watchUrl: newUrl }
     );
     const newUrlMessage = {
       user: {
@@ -133,10 +138,10 @@ class Manager {
       id: 0,
       userId: 0,
     };
-    this.in(data.partyHash).emit(SocketEvents.NEW_MESSAGE, {
+    this.to(partyHash).emit(SocketEvents.NEW_MESSAGE, {
       message: newUrlMessage,
     });
-    this.to(data.partyHash).emit(SocketEvents.URL_CHANGE, { data } );
+    this.to(partyHash).emit(SocketEvents.URL_CHANGE, { data: { newUrl } });
   }
 
   /*
