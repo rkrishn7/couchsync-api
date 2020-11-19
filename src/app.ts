@@ -24,7 +24,7 @@ export const createApplication = ({
   app.use(bodyParser.json());
   // Grant a database connection to this request
   app.use(grantConnection(connectionPool));
-  app.use(grantSocketServer(socketManager));
+  app.use(grantSocketServer(socketManager.server));
 
   // Register routes
   values(controllers).forEach(({ path, router }) => app.use(path, router));

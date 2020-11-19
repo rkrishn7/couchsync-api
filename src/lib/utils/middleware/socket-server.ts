@@ -1,8 +1,8 @@
-import SocketManager from 'lib/socket/server';
+import { Server } from 'socket.io';
 
-export const grantSocketServer = (manager: SocketManager) => {
+export const grantSocketServer = (server: Server) => {
   return (req: any, _res?: any, next?: () => void) => {
-    req.socketServer = manager.server;
+    req.socketServer = server;
     if (typeof next !== 'undefined') next();
   };
 };

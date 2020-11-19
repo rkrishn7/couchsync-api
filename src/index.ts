@@ -8,11 +8,11 @@ import { createApplication } from './app';
 const main = () => {
   const connectionPool = createPool();
 
-  const socketServer = new SocketManager({ connectionPool });
+  const socketManager = new SocketManager({ connectionPool });
 
   const app = createApplication({
     connectionPool,
-    socketManager: socketServer,
+    socketManager,
   });
 
   const httpServer = http.createServer(app);
@@ -21,7 +21,7 @@ const main = () => {
 
   httpServer.listen(PORT, () => {
     console.log(`Server started in ${STAGE} mode. Listening on port ${PORT}`);
-    socketServer.bind(httpServer).listen();
+    socketManager.listen(httpServer);
   });
 };
 

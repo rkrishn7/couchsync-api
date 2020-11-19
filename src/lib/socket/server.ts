@@ -21,6 +21,7 @@ export default class Manager {
 
   constructor({ connectionPool }: ManagerOptions) {
     this.pool = connectionPool;
+    this.server = io();
     this.events = [
       [SocketEvents.DISCONNECT, this.onSocketDisconnect],
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
@@ -38,18 +39,8 @@ export default class Manager {
     }
   }
 
-  bind(httpServer: Server) {
-    this.server = io(httpServer);
-
-    return this;
-  }
-
-  listen() {
-    if (!this.server) {
-      throw new Error(
-        "No server initialized. Make sure you've made a call to `bind`."
-      );
-    }
+  listen(httpServer: Server) {
+    this.server.attach(httpServer);
 
     this.server.on('connection', async (socket) => {
       console.log('socket', socket.id, 'connected');
