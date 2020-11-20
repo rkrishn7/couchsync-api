@@ -24,6 +24,9 @@ jobs:
         with:
           node-version: '12'
 
+      - name: install deps
+        run: yarn install --frozen-lockfile
+
       - name: test
         run: |
           yarn test:unit
