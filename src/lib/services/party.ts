@@ -50,6 +50,7 @@ export class Party extends Service {
   }
 
   async getActiveParty({ partyHash }: GetParams) {
+    console.log(partyHash);
     const results: any = await query(
       this.connection,
       `
