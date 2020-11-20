@@ -17,7 +17,7 @@ jobs:
           MYSQL_PASSWORD: password
           MYSQL_DATABASE: couchsync
           MYSQL_ROOT_PASSWORD: password
-
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -29,8 +29,11 @@ jobs:
 
       - name: verify mysql connection
         run: |
-          sudo apt-get install -y mysql-client
-          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot -ppassword -e "SHOW DATABASES"
+          while ! mysqladmin ping -h"127.0.0.1" -P"$PORT" --silent; do
+            sleep 1
+          done
+        env:
+          PORT: ${{ job.services.mysql.ports[3306] }}
 
       - name: test
         run: |
