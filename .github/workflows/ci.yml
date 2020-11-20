@@ -35,7 +35,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: password
           DB_NAME: couchsync
-          DB_HOST: 127.0.0.1
+          DB_HOST: 0.0.0.0
           DB_PORT: ${{ job.services.mysql.ports[3306] }}
 
       - name: Coveralls
