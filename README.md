@@ -4,6 +4,15 @@
 
 ### `yarn run:watch`
 
+**Make sure you configure your `.env` before running**
+
+For development mode:
+
+```
+PORT=8000
+STAGE=dev
+```
+
 Runs the development server in watch mode. When you make a change to the code, the server will restart.
 
 ## Database

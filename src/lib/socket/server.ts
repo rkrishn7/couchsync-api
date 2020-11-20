@@ -26,6 +26,7 @@ export default class Manager {
       [SocketEvents.DISCONNECT, this.onSocketDisconnect],
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
       [SocketEvents.SEND_MESSAGE, this.onSocketSendMessage],
+      [SocketEvents.URL_CHANGE, this.onUrlChange],
       [SocketEvents.VIDEO_EVENT, this.onSocketVideoEvent],
     ];
   }
@@ -125,5 +126,30 @@ export default class Manager {
 
   async onSocketVideoEvent(this: io.Socket, data: VideoEvent) {
     this.to(data.partyHash).emit(SocketEvents.VIDEO_EVENT, data.eventData);
+  }
+
+  async onUrlChange(
+    this: io.Socket,
+    { partyHash, newUrl }: { partyHash: string; newUrl: string }
+  ) {
+    await this.request.services.party.updatePartyDetails(
+      {
+        partyHash,
+      },
+      { watchUrl: newUrl }
+    );
+    const newUrlMessage = {
+      user: {
+        name: 'couchsync',
+        avatarUrl: 'https://avatars.dicebear.com/api/bottts/couchs.svg',
+      },
+      content: `Host is navigating to new video!`,
+      id: 0,
+      userId: 0,
+    };
+    this.to(partyHash).emit(SocketEvents.NEW_MESSAGE, {
+      message: newUrlMessage,
+    });
+    this.to(partyHash).emit(SocketEvents.URL_CHANGE, { data: { newUrl } });
   }
 }
