@@ -27,10 +27,6 @@ jobs:
       - name: install deps
         run: yarn install --frozen-lockfile
 
-      - name: create test database
-        run: |
-          yarn db:create
-
       - name: verify mysql connection
         run: |
           sudo apt-get install -y mysql-client
@@ -44,7 +40,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: password
           DB_NAME: couchsync
-          DB_HOST: 0.0.0.0
+          DB_HOST: 127.0.0.1
           DB_PORT: ${{ job.services.mysql.ports[3306] }}
 
       - name: Coveralls
