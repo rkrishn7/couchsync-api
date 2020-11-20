@@ -19,12 +19,13 @@ interface CustomContext {
 
 export const test = avaTest as TestInterface<CustomContext>;
 
-const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD } = settings;
+const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT } = settings;
 
 test.serial.before((t) => {
   t.context.pool = createPool({
     host: DB_HOST,
     user: DB_USER,
+    port: DB_PORT as unknown as number,
     password: DB_PASSWORD,
     waitForConnections: true,
     connectionLimit: 40,

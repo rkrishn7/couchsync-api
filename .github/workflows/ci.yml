@@ -11,7 +11,7 @@ jobs:
       mysql:
         image: mysql:8
         ports:
-          - 13306:3306
+          - 3306
         env:
           MYSQL_USER: root
           MYSQL_PASSWORD: password
@@ -36,6 +36,7 @@ jobs:
           DB_PASSWORD: password
           DB_NAME: couchsync
           DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
