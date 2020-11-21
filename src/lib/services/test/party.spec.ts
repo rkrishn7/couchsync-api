@@ -1,4 +1,5 @@
-import { test } from 'lib/test/fixtures/global';
+import { createUserAndJoinParty, test } from 'lib/test/fixtures/global';
+import { ServiceError } from 'lib/errors/service-error';
 
 test('creates new party', async (t) => {
   const party = await t.context.services.party.create({
@@ -15,21 +16,52 @@ test('creates new party', async (t) => {
 });
 
 test('get active party - success', async (t) => {
-  const newParty = await t.context.services.party.create({
+  const { hash } = await t.context.services.party.create({
     watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
   });
 
-  const getParty = await t.context.services.party.getActiveParty({ partyHash: newParty.hash });
+  const socketId = 'NewSocket';
+  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
 
-  const { joinUrl, hostId, hash } = getParty;
+  const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
 
-  t.deepEqual(hostId, null);
-  t.deepEqual(hash, '2c643ec2-517d-4d23-a872-ee1500d6c7ad')
-  t.deepEqual(joinUrl, 'https://www.youtube.com/watch?couchSyncRoomId=2c643ec2-517d-4d23-a872-ee1500d6c7ad&v=0O8vw87g-bc');
+  t.deepEqual(getParty.hostId, 1);
+  t.deepEqual(getParty.hash, hash);
+  t.deepEqual(getParty.joinUrl, `https://www.youtube.com/watch?couchSyncRoomId=${hash}&v=MepGo2xmVJw`);
 });
 
-test('get active party - fail', async (t) => {
+test('get active party - party does not exist', async (t) => {
   await t.throwsAsync(async () => {
     await t.context.services.party.getActiveParty({ partyHash: 'WrongPartyHash' });
   }, {instanceOf: ServiceError, message: 'Unable to find party'});
+});
+
+test('updates party details - success', async (t) => {
+  const { hash } = await t.context.services.party.create({
+    watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
+  });
+
+  const socketId = 'NewSocket';
+  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
+
+  await t.context.services.party.updatePartyDetails({ partyHash: hash }, { watchUrl: 'https://www.youtube.com/watch?v=newUrl' });
+  const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
+
+  t.deepEqual(getParty.hash, hash);
+  t.deepEqual(getParty.joinUrl, 'https://www.youtube.com/watch?v=newUrl');
+});
+
+test('updates party details - party does not exist', async (t) => {
+  const { hash } = await t.context.services.party.create({
+    watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
+  });
+
+  const socketId = 'NewSocket';
+  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
+
+  await t.context.services.party.updatePartyDetails({ partyHash: 'WrongHash' }, { watchUrl: 'https://www.youtube.com/watch?v=newUrl' });
+  const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
+
+  t.deepEqual(getParty.hash, hash);
+  t.deepEqual(getParty.joinUrl, `https://www.youtube.com/watch?couchSyncRoomId=${hash}&v=MepGo2xmVJw`);
 });
