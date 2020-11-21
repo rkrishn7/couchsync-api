@@ -5,7 +5,7 @@ install: yarn install --frozen-lockfile
 services:
   - mysql
 before_script:
-  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('password') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
+  - echo "USE mysql;\nUPDATE user SET authentication_string = PASSWORD('password') WHERE user = 'root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 script: yarn test:unit
 env:
   - DB_USER=root DB_PASSWORD=password DB_NAME=couchsync DB_HOST=127.0.0.1 DB_PORT=3306
