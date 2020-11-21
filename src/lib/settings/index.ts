@@ -13,6 +13,7 @@ const {
   DB_PASSWORD,
   DB_NAME,
   DB_HOST,
+  DB_PORT,
   DEBUG,
 } = process.env;
 
@@ -23,5 +24,6 @@ export default {
   DB_PASSWORD,
   DB_NAME,
   DB_HOST,
+  DB_PORT,
   DEBUG,
 };

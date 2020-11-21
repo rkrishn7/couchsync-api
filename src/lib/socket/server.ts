@@ -1,19 +1,27 @@
 import { Server } from 'http';
+import io, { Socket } from 'socket.io';
+import { Pool } from 'mysql2/promise';
 
 import { Message, VideoEvent } from 'lib/types';
-import { database } from 'lib/utils/middleware/database';
-import io, { Socket } from 'socket.io';
+import { grantConnection } from 'lib/utils/middleware/database';
 
 import { SocketEvents } from './events';
 
-class Manager {
+interface ManagerOptions {
+  connectionPool: Pool;
+}
+
+export default class Manager {
   server!: io.Server;
+  pool: Pool;
   readonly events!: [
     string,
     (data: Record<string, any>, ack?: (data: any) => void) => void
   ][];
 
-  constructor() {
+  constructor({ connectionPool }: ManagerOptions) {
+    this.pool = connectionPool;
+    this.server = io();
     this.events = [
       [SocketEvents.DISCONNECT, this.onSocketDisconnect],
       [SocketEvents.JOIN_PARTY, this.onSocketJoinParty],
@@ -25,15 +33,16 @@ class Manager {
 
   async grantServices(socket: Socket, work: any) {
     try {
-      await database(socket.request);
+      await grantConnection(this.pool)(socket.request);
       await work();
     } finally {
       if (socket.request.conn) await socket.request.conn.release();
     }
   }
 
-  listen(http: Server) {
-    this.server = io(http);
+  listen(httpServer: Server) {
+    this.server.attach(httpServer);
+
     this.server.on('connection', async (socket) => {
       console.log('socket', socket.id, 'connected');
 
@@ -143,21 +152,4 @@ class Manager {
     });
     this.to(partyHash).emit(SocketEvents.URL_CHANGE, { data: { newUrl } });
   }
-
-  /*
-  async onSocketGetMessages(
-    this: io.Socket,
-    data: { partyId: number },
-    ack: (data: { messages: any[] }) => void
-  ) {
-    const { partyId } = data;
-    const { messages } = await MessageService.search({ partyId });
-
-    ack({
-      messages,
-    });
-  }
-  */
 }
-
-export default new Manager();
