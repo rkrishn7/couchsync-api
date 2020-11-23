@@ -1,4 +1,4 @@
-import avaTest, { TestInterface, ExecutionContext} from 'ava';
+import avaTest, { TestInterface } from 'ava';
 import { PoolConnection, Pool } from 'mysql2/promise';
 import { mapValues } from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -16,12 +16,6 @@ interface CustomContext {
   connection: PoolConnection;
   testDbName: string;
   application: Application;
-}
-
-interface createUserAndJoinPartyParams {
-  t: ExecutionContext<CustomContext>,
-  hash: string,
-  socket: string,
 }
 
 export const test = avaTest as TestInterface<CustomContext>;
@@ -94,15 +88,3 @@ test.afterEach(async (t) => {
 test.after.always(async (t) => {
   await t.context.pool.end();
 });
-
-export async function createUserAndJoinParty({ t, hash, socket }: createUserAndJoinPartyParams) {
-  await t.context.services.users.create({
-    socketId: socket,
-  });
-
-  const { user } = await t.context.services.users.joinParty({
-    hash: hash,
-    socketId: socket,
-  });
-  return user;
-}

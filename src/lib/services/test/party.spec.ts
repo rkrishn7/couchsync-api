@@ -1,5 +1,12 @@
-import { createUserAndJoinParty, test } from 'lib/test/fixtures/global';
+import { ExecutionContext} from 'ava';
+import { test, CustomContext } from 'lib/test/fixtures/global';
 import { ServiceError } from 'lib/errors/service-error';
+
+interface createUserAndJoinPartyParams {
+  t: ExecutionContext<CustomContext>, 
+  hash: string, 
+  socket: string, 
+}
 
 test('creates new party', async (t) => {
   const party = await t.context.services.party.create({
@@ -65,3 +72,15 @@ test('updates party details - party does not exist', async (t) => {
   t.deepEqual(getParty.hash, hash);
   t.deepEqual(getParty.joinUrl, `https://www.youtube.com/watch?couchSyncRoomId=${hash}&v=MepGo2xmVJw`);
 });
+
+async function createUserAndJoinParty({ t, hash, socket }: createUserAndJoinPartyParams) {
+  await t.context.services.users.create({
+    socketId: socket,
+  });
+
+  const { user } = await t.context.services.users.joinParty({
+    hash: hash,
+    socketId: socket,
+  });
+  return user;
+}

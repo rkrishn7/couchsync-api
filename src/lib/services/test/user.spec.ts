@@ -1,4 +1,11 @@
-import { test, createUserAndJoinParty } from 'lib/test/fixtures/global';
+import { ExecutionContext} from 'ava';
+import { test, CustomContext } from 'lib/test/fixtures/global';
+
+interface createUserAndJoinPartyParams {
+  t: ExecutionContext<CustomContext>, 
+  hash: string, 
+  socket: string, 
+}
 
 test('creates new user', async (t) => {
   const user = await t.context.services.users.create({
@@ -102,3 +109,15 @@ test('joins party - user does not exist', async (t) => {
     await t.context.services.users.joinParty({ hash , socket: 'DoesNotExist' });
   }, { instanceOf: Error }); 
 });
+
+async function createUserAndJoinParty({ t, hash, socket }: createUserAndJoinPartyParams) {
+  await t.context.services.users.create({
+    socketId: socket,
+  });
+
+  const { user } = await t.context.services.users.joinParty({
+    hash: hash,
+    socketId: socket,
+  });
+  return user;
+}
