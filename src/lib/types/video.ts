@@ -1,5 +1,3 @@
-import { VideoSocketEvents } from '@app/lib/socket/events';
-
 export interface VideoEvent {
   partyHash: string;
   eventData: VideoEventData;
@@ -11,5 +9,5 @@ export interface VideoEventData {
   currentTime: number;
   playbackRate: number;
   duration: number;
-  eventType: VideoSocketEvents;
+  videoId: string;
 }
