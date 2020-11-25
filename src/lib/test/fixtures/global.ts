@@ -1,20 +1,24 @@
 import avaTest, { TestInterface } from 'ava';
 import { PoolConnection, Pool } from 'mysql2/promise';
+import { Application } from 'express';
 
 import { getServices } from 'lib/services';
 import settings from 'lib/settings';
 import { createPool } from 'database/pool';
+import { createApplication } from 'app';
+import SocketManager from 'lib/socket/server';
 
 import { mapValues } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import shell from 'shelljs';
 
 // test cii
-interface CustomContext {
+export interface CustomContext {
   services: any;
   pool: Pool;
   connection: PoolConnection;
   testDbName: string;
+  app?: Application;
 }
 
 export const test = avaTest as TestInterface<CustomContext>;
@@ -30,6 +34,13 @@ test.serial.before((t) => {
     waitForConnections: true,
     connectionLimit: 40,
     queueLimit: 0,
+  });
+
+  const socketManager = new SocketManager({ connectionPool: t.context.pool })
+
+  t.context.app = createApplication({
+    connectionPool: t.context.pool, 
+    socketManager: socketManager,
   });
 });
 
