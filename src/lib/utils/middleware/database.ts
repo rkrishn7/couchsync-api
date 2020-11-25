@@ -1,4 +1,4 @@
-import { getServices } from '@app/lib/services';
+import { getServices } from 'lib/services';
 import { mapValues } from 'lodash';
 import { Pool } from 'mysql2/promise';
 

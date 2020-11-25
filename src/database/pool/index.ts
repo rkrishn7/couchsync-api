@@ -1,4 +1,4 @@
-import settings, { DebugOptions } from '@app/lib/settings';
+import settings, { DebugOptions } from 'lib/settings';
 import mysql, { PoolOptions, Pool } from 'mysql2/promise';
 
 const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DEBUG } = settings;

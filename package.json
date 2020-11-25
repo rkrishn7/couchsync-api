@@ -10,6 +10,7 @@
   "keywords": [],
   "scripts": {
     "run:watch": "nodemon",
+    "run:prod": "NODE_PATH=./build/main node ./build/main/index.js",
     "db:migrate:make": "db-migrate create",
     "db:migrate:revert": "db-migrate down",
     "db:migrate": "db-migrate up",
