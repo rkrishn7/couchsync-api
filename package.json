@@ -10,6 +10,7 @@
   "keywords": [],
   "scripts": {
     "run:watch": "nodemon",
+    "docker:env": "docker-compose up",
     "db:migrate:make": "db-migrate create",
     "db:migrate:revert": "db-migrate down",
     "db:migrate": "db-migrate up",
