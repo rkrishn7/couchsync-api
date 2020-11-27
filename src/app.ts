@@ -33,3 +33,27 @@ export const createApplication = ({
 
   return app;
 };
+
+export const createTestApplication = ({
+  connection,
+  services,
+}: any): Application => {
+  const app = express();
+
+  app.use(bodyParser.json());
+  // Grant a database connection to this request
+  app.use((req: any, _res?: any, next?: () => void) => {
+    req.conn = connection;
+    req.services = services;
+    req.socketServer = new SocketManager({ connectionPool: {} as any });
+
+    next();
+  });
+
+  // Register routes
+  values(controllers).forEach(({ path, router }) => app.use(path, router));
+
+  app.use(errorHandler);
+
+  return app;
+};
