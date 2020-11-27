@@ -1,4 +1,4 @@
-import { validate } from '@app/lib/utils/middleware/validate';
+import { validate } from 'lib/utils/middleware/validate';
 import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import Joi from 'joi';

@@ -1,4 +1,4 @@
-import { VideoSocketEvents } from '@app/lib/socket/events';
+import { VideoSocketEvents } from 'lib/socket/events';
 
 export interface VideoEvent {
   partyHash: string;
