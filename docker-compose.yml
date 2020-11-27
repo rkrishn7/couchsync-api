@@ -18,8 +18,6 @@ services:
       - mysql
     ports:
       - 8000:8000
-    volumes:
-      - ./:/app
   web:
     image: nginx:latest
     depends_on:
