@@ -10,7 +10,8 @@
   "keywords": [],
   "scripts": {
     "run:watch": "nodemon",
-    "docker:up": "docker-compose up",
+    "docker:up:dev": "docker-compose up mysql",
+    "docker:up:prod": "docker-compose up",
     "run:prod": "NODE_PATH=./build/main node ./build/main/index.js",
     "db:migrate:make": "db-migrate create",
     "db:migrate:revert": "db-migrate down",

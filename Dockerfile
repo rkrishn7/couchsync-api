@@ -4,4 +4,5 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
-CMD ["node", "build/main/index.js"]
+RUN yarn db:migrate
+CMD ["yarn", "run:prod"]
