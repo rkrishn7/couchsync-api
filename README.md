@@ -17,20 +17,12 @@ PORT=8000
 DB_NAME=couchsync
 DB_USER=root
 DB_PASSWORD=password
-DB_HOST=localhost
-```
-
-**NOTE: Make sure the credentials are configured correctly in mysql. You might issue the following query on your locally installed mysql client**
-
-```sql
-UPDATE mysql.user 
-    SET authentication_string = PASSWORD("password")
-    WHERE user = 'root';
-FLUSH PRIVILEGES;
+DB_HOST=127.0.0.1
 ```
 
 - Install dependencies by running `yarn`
 - Create the dev database by running `yarn db:create`
+- Start the mysql container by running `yarn docker:up:dev`.
 - Apply the database migrations by running `yarn db:migrate`
 
 Run `yarn run:watch` to start the development server. We use [nodemon](https://www.npmjs.com/package/nodemon) to watch for file changes and reload the development server.
