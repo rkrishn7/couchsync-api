@@ -26,7 +26,6 @@
       { "allowWholeFile": true }
     ],
     "@typescript-eslint/no-explicit-any": "off",
-    // "@typescript-eslint/ban-ts-comment": "off",
     "eslint-comments/no-unused-disable": "error",
     "import/order": "off",
     "sort-imports": "off"

@@ -73,7 +73,6 @@
     "query-string": "^6.13.6",
     "socket.io": "^2.3.0",
     "supertest": "^6.0.1",
-    "ts-mockito": "^2.6.1",
     "unique-names-generator": "^4.3.1",
     "uuid": "^8.3.1"
   },
