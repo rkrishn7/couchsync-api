@@ -1,7 +1,7 @@
 {
-  "name": "playback_sync_api",
+  "name": "couchsync-api",
   "version": "1.0.0",
-  "description": "Playback Sync API",
+  "description": "couchsync API",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
@@ -10,6 +10,9 @@
   "keywords": [],
   "scripts": {
     "run:watch": "nodemon",
+    "docker:up:dev": "docker-compose up mysql",
+    "docker:up:prod": "docker-compose up",
+    "run:prod": "NODE_PATH=./build/main node ./build/main/index.js",
     "db:migrate:make": "db-migrate create",
     "db:migrate:revert": "db-migrate down",
     "db:migrate": "db-migrate up",
@@ -20,7 +23,6 @@
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
-    "test": "run-s build test:*",
     "test:lint": "eslint src --ext .ts",
     "test:prettier": "prettier \"src/**/*.ts\" --list-different",
     "test:unit": "nyc --silent ava",
@@ -53,6 +55,7 @@
     "@types/mysql": "^2.15.15",
     "@types/query-string": "^6.3.0",
     "@types/socket.io": "^2.1.11",
+    "@types/supertest": "^2.0.10",
     "@types/uuid": "^8.3.0",
     "body-parser": "^1.19.0",
     "camelcase-keys": "^6.2.2",
@@ -69,6 +72,8 @@
     "nodemon": "^2.0.6",
     "query-string": "^6.13.6",
     "socket.io": "^2.3.0",
+    "supertest": "^6.0.1",
+    "ts-mockito": "^2.6.1",
     "unique-names-generator": "^4.3.1",
     "uuid": "^8.3.1"
   },
@@ -110,11 +115,15 @@
     "README.md"
   ],
   "ava": {
+    "files": [
+      "!build/*",
+      "**/*.spec.ts"
+    ],
     "extensions": [
       "ts"
     ],
     "require": [
-      "ts-node/register",
+      "ts-node/register/transpile-only",
       "tsconfig-paths/register"
     ]
   },
@@ -129,7 +138,8 @@
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
     "exclude": [
-      "**/*.spec.js"
+      "**/*.spec.js",
+      "build/*"
     ]
   }
 }

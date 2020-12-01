@@ -41,9 +41,6 @@
     "types": ["node"],
     "typeRoots": ["node_modules/@types", "src/types"],
     "baseUrl": "./src",
-    "paths": {
-      "@app/*": ["./*"]
-    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**", "src/database/migrations/**"],

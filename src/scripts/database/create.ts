@@ -1,4 +1,4 @@
-import settings from '@app/lib/settings';
+import settings from 'lib/settings';
 import mysql from 'mysql';
 
 const connection = mysql.createConnection({

@@ -1,54 +1,36 @@
-# playback_sync_api
+# couchsync API
 
-## Server
+[![Build Status](https://travis-ci.org/rkrishn7/couchsync-api.svg?branch=main)](https://travis-ci.org/rkrishn7/couchsync-api)
+[![Coverage Status](https://coveralls.io/repos/github/rkrishn7/couchsync-api/badge.svg?branch=main)](https://coveralls.io/github/rkrishn7/couchsync-api?branch=main)
 
-### `yarn run:watch`
+## Welcome
 
-**Make sure you configure your `.env` before running**
+This repo hosts the necessary application server code for running the [couchsync](https://rkrishn7.github.io/couchsync/) chrome extension.
 
-For development mode:
+### Setting Up
 
-```
-PORT=8000
+First, you'll need to define a few environment variables. Copy and paste the following into a locally created `.env` file.
+
+```sh
 STAGE=dev
+PORT=8000
+DB_NAME=couchsync
+DB_USER=root
+DB_PASSWORD=password
+DB_HOST=127.0.0.1
 ```
 
-Runs the development server in watch mode. When you make a change to the code, the server will restart.
+- Install dependencies by running `yarn`
+- Create the dev database by running `yarn db:create`
+- Start the mysql container by running `yarn docker:up:dev`.
+- Apply the database migrations by running `yarn db:migrate`
 
-## Database
-
-We're using [db-migrate](https://db-migrate.readthedocs.io/en/latest/) to manage database migrations. Migrations can be found in `src/database/migrations`.
-
-Make sure you have the following in your `.env`
-
-```
-DB_NAME
-DB_USER
-DB_PASSWORD
-```
-
-And in `prisma/.env`
-
-```
-DATABASE_URL
-```
-
-### Creating the Database
-
-To create the database, run `yarn db:create`.
+Run `yarn run:watch` to start the development server. We use [nodemon](https://www.npmjs.com/package/nodemon) to watch for file changes and reload the development server.
 
 ### Creating a Migration
 
-To create a new migration file, run `yarn db:migrate:make <filename_without_extension>`
+To create a new migration file, run `yarn db:migrate:make <filename_without_extension>`.
 
 ### Reverting
 
-To revert a specific migration, run `yarn db:migrate:revert <filename_without_extension>`. This will run the code in `exports.down`
-
-### Running Migrations
-
-To run the latest migrations, run `yarn db:migrate`
-
-Some helpful resources for Prisma:
-
-- https://github.com/prisma/docs/issues/800
+To revert a specific migration, run `yarn db:migrate:revert <filename_without_extension>`. This will run the code in `exports.down`.
