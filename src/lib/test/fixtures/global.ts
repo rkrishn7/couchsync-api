@@ -10,7 +10,7 @@ import settings from 'lib/settings';
 import { createPool } from 'database/pool';
 import { createTestApplication } from 'app';
 
-interface CustomContext {
+export interface CustomContext {
   services: Services;
   pool: Pool;
   connection: PoolConnection;

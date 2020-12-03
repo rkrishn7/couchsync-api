@@ -1,12 +1,20 @@
-import { ExecutionContext} from 'ava';
-import { test, CustomContext } from 'lib/test/fixtures/global';
+import { TestInterface } from 'ava';
+import { test as globalTest, CustomContext } from 'lib/test/fixtures/global';
 import { ServiceError } from 'lib/errors/service-error';
 
-interface createUserAndJoinPartyParams {
-  t: ExecutionContext<CustomContext>, 
-  hash: string, 
-  socket: string, 
+interface PartyTestContext extends CustomContext {
+  user?: any;
 }
+
+const test = globalTest as TestInterface<PartyTestContext>;
+
+test.serial.beforeEach(async t => {
+  const { user } = await t.context.services.users.create({
+    socketId: 'blah',
+  });
+
+  t.context.user = user;
+});
 
 test('creates new party', async (t) => {
   const party = await t.context.services.party.create({
@@ -27,8 +35,10 @@ test('get active party - success', async (t) => {
     watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
   });
 
-  const socketId = 'NewSocket';
-  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
+  await t.context.services.users.joinParty({
+    hash: hash,
+    socketId: t.context.user!.socketId,
+  });
 
   const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
 
@@ -40,7 +50,10 @@ test('get active party - success', async (t) => {
 test('get active party - party does not exist', async (t) => {
   await t.throwsAsync(async () => {
     await t.context.services.party.getActiveParty({ partyHash: 'WrongPartyHash' });
-  }, {instanceOf: ServiceError, message: 'Unable to find party'});
+  }, {
+    instanceOf: ServiceError,
+    message: 'Unable to find party'
+  });
 });
 
 test('updates party details - success', async (t) => {
@@ -48,8 +61,10 @@ test('updates party details - success', async (t) => {
     watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
   });
 
-  const socketId = 'NewSocket';
-  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
+  await t.context.services.users.joinParty({
+    hash: hash,
+    socketId: t.context.user!.socketId,
+  });
 
   await t.context.services.party.updatePartyDetails({ partyHash: hash }, { watchUrl: 'https://www.youtube.com/watch?v=newUrl' });
   const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
@@ -63,8 +78,10 @@ test('updates party details - party does not exist', async (t) => {
     watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
   });
 
-  const socketId = 'NewSocket';
-  await createUserAndJoinParty({ t: t, hash: hash, socket: socketId});
+  await t.context.services.users.joinParty({
+    hash: hash,
+    socketId: t.context.user!.socketId,
+  });
 
   await t.context.services.party.updatePartyDetails({ partyHash: 'WrongHash' }, { watchUrl: 'https://www.youtube.com/watch?v=newUrl' });
   const getParty = await t.context.services.party.getActiveParty({ partyHash: hash });
@@ -72,15 +89,3 @@ test('updates party details - party does not exist', async (t) => {
   t.deepEqual(getParty.hash, hash);
   t.deepEqual(getParty.joinUrl, `https://www.youtube.com/watch?couchSyncRoomId=${hash}&v=MepGo2xmVJw`);
 });
-
-async function createUserAndJoinParty({ t, hash, socket }: createUserAndJoinPartyParams) {
-  await t.context.services.users.create({
-    socketId: socket,
-  });
-
-  const { user } = await t.context.services.users.joinParty({
-    hash: hash,
-    socketId: socket,
-  });
-  return user;
-}
