@@ -45,7 +45,7 @@ export const createTestApplication = ({
   app.use((req: any, _res?: any, next?: () => void) => {
     req.conn = connection;
     req.services = services;
-    req.socketServer = new SocketManager({ connectionPool: {} as any });
+    req.socketServer = new SocketManager({ connectionPool: {} as any }).server;
 
     next();
   });
