@@ -24,8 +24,7 @@ test('POST /party/create - 422', async (t) => {
   t.pass();
 });
 
-test('GET /party/ - 200', async (t) => {
-
+test('GET /party - 200', async (t) => {
   // need to create a new user and party for test to work
   const res = await request(t.context.application)
     .post('/party/create')
@@ -51,15 +50,15 @@ test('GET /party/ - 200', async (t) => {
   t.pass();
 });
 
-test('GET /party/ - 422', async (t) => {
+test('GET /party - 422', async (t) => {
   await request(t.context.application)
-    .get(`/party/`)
+    .get(`/party`)
     .expect(422);
 
   t.pass();
 });
 
-test('GET /party/ - 500', async (t) => {
+test('GET /party - 500', async (t) => {
   await request(t.context.application)
     .get(`/party/?partyHash=BADURL`)
     .expect(500);

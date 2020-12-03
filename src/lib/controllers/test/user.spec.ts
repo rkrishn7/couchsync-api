@@ -1,22 +1,45 @@
 import request from 'supertest';
+import { TestInterface } from 'ava';
 
-import { test, CustomContext } from 'lib/test/fixtures/global';
-import { ExecutionContext } from 'ava';
+import { test as globalTest, CustomContext } from 'lib/test/fixtures/global';
 
-interface createPartyAndUserParams {
-  t: ExecutionContext<CustomContext>;
+interface PartyTestContext extends CustomContext {
+  user: any;
+  party: any;
 }
 
+const test = globalTest as TestInterface<PartyTestContext>;
+
+test.serial.beforeEach(async t => {
+  const userSocketId = 'blah';
+
+  await t.context.services.users.create({
+    socketId: userSocketId,
+  });
+
+  const party = await t.context.services.party.create({
+    watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
+  });
+
+  const { user } = await t.context.services.users.joinParty({
+    hash: party.hash,
+    socketId: userSocketId,
+  });
+
+  t.context.user = user;
+  t.context.party = party;
+});
+
 test('PUT /user/profile - 200', async (t) => {
-  const { hash } = await createPartyAndUser({ t });
+  const { hash } = t.context.party;
 
   const res = await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
-      userId: 1,
+      userId: t.context.user.id,
       avatarUrl: 'NEWURL',
-      partyHash: hash, 
+      partyHash: hash,
     })
     .expect(200);
 
@@ -28,15 +51,15 @@ test('PUT /user/profile - 200', async (t) => {
 });
 
 test('PUT /user/profile - 422 invalid name', async (t) => {
-  const { hash } = await createPartyAndUser({ t });
+  const { hash } = t.context.party;
 
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 1,
-      userId: 1,
+      userId: t.context.user.name,
       avatarUrl: 'NEWURL',
-      partyHash: hash, 
+      partyHash: hash,
     })
     .expect(422);
 
@@ -44,15 +67,15 @@ test('PUT /user/profile - 422 invalid name', async (t) => {
 });
 
 test('PUT /user/profile - 422 invalid userId', async (t) => {
-  const { hash } = await createPartyAndUser({ t });
+  const { hash } = t.context.party.hash;
 
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
       userId: 'INVALIDUSERID',
       avatarUrl: 'NEWURL',
-      partyHash: hash, 
+      partyHash: hash,
     })
     .expect(422);
 
@@ -60,15 +83,15 @@ test('PUT /user/profile - 422 invalid userId', async (t) => {
 });
 
 test('PUT /user/profile - 422 invalid avatarUrl', async (t) => {
-  const { hash } = await createPartyAndUser({ t });
+  const { hash } = t.context.party.hash;
 
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
-      userId: 1,
+      userId: t.context.user.id,
       avatarUrl: 1,
-      partyHash: hash, 
+      partyHash: hash,
     })
     .expect(422);
 
@@ -78,11 +101,11 @@ test('PUT /user/profile - 422 invalid avatarUrl', async (t) => {
 test('PUT /user/profile - 422 invalid partyHash', async (t) => {
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
-      userId: 1,
+      userId: t.context.user.id,
       avatarUrl: 'NEWURL',
-      partyHash: 1, 
+      partyHash: 1,
     })
     .expect(422);
 
@@ -92,11 +115,11 @@ test('PUT /user/profile - 422 invalid partyHash', async (t) => {
 test('PUT /user/profile - 500 user does not exist', async (t) => {
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
       userId: 2,
       avatarUrl: 'NEWURL',
-      partyHash: 'invalid', 
+      partyHash: 'invalid',
     })
     .expect(500);
 
@@ -104,35 +127,15 @@ test('PUT /user/profile - 500 user does not exist', async (t) => {
 });
 
 test('PUT /user/profile - 500 party does not exist', async (t) => {
-  await createPartyAndUser({ t });
-
   await request(t.context.application)
     .put('/user/profile')
-    .send({ 
+    .send({
       name: 'NEWNAME',
       userId: 3,
       avatarUrl: 'NEWURL',
-      partyHash: 'WRONGHASH', 
+      partyHash: 'WRONGHASH',
     })
     .expect(500);
 
   t.pass();
 });
-
-async function createPartyAndUser({ t }: createPartyAndUserParams ) {
-  const { hash } = await t.context.services.party.create({
-    watchUrl: 'https://www.youtube.com/watch?v=MepGo2xmVJw',
-  }); 
-  
-  const socket = 'newSocket';
-  await t.context.services.users.create({
-    socketId: socket,
-  });
-
-  const { user } = await t.context.services.users.joinParty({
-    hash: hash,
-    socketId: socket,
-  });
-
-  return { user, hash };
-}
