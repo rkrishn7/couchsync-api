@@ -111,7 +111,8 @@
     "!**/*.json",
     "CHANGELOG.md",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "lib/cli"
   ],
   "ava": {
     "files": [
