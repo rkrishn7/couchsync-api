@@ -10,24 +10,25 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_DATABASE: couchsync
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: '${DB_NAME}'
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
   app:
     build: .
+    restart: always
     depends_on:
       - mysql
     ports:
       - 8000:8000
   web:
     image: nginx:latest
+    restart: always
     depends_on:
       - app
     volumes:
+      - ~/certificates:/etc/nginx/certificates
       - ./nginx/templates:/etc/nginx/templates
     ports:
-      - 80:80
-    environment:
-      NGINX_PORT: 80
+      - 443:443
 
 volumes:
   db:
