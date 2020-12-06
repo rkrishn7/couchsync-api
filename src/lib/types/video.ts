@@ -9,5 +9,4 @@ export interface VideoEventData {
   currentTime: number;
   playbackRate: number;
   duration: number;
-  videoId: string;
 }
