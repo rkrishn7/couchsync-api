@@ -14,12 +14,14 @@ services:
       MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
   app:
     build: .
+    restart: always
     depends_on:
       - mysql
     ports:
       - 8000:8000
   web:
     image: nginx:latest
+    restart: always
     depends_on:
       - app
     volumes:
