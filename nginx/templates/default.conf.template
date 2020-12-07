@@ -1,8 +1,18 @@
 server {
+  listen 80;
+  server_name www.couchsync.live;
+  return 301 https://www.couchsync.live$request_uri;
+}
+
+server {
   listen 443            ssl;
   server_name           www.couchsync.live;
   ssl_certificate       certificates/www.couchsync.live.chained.crt;
   ssl_certificate_key 	certificates/www.couchsync.live.key;
+
+  location / {
+    root /www/data;
+  }
 
   location /api/ {
     proxy_set_header X-Real-IP $remote_addr;
