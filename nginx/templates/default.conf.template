@@ -1,16 +1,32 @@
 server {
-  listen ${NGINX_PORT} default_server;
+  listen 80;
+  server_name www.couchsync.live;
+  return 301 https://www.couchsync.live$request_uri;
+}
+
+server {
+  listen 443            ssl;
+  server_name           www.couchsync.live;
+  ssl_certificate       certificates/www.couchsync.live.chained.crt;
+  ssl_certificate_key 	certificates/www.couchsync.live.key;
 
   location / {
+    root /www/data;
+  }
+
+  location /api/ {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header Host $host;
 
-    proxy_pass http://app:8000;
+    proxy_pass http://app:8000/;
+
+    proxy_redirect off;
 
     # enable WebSockets
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
+    proxy_cache_bypass $http_upgrade;
   }
 }
