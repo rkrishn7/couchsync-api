@@ -113,7 +113,6 @@
     "CHANGELOG.md",
     "LICENSE",
     "README.md",
-    "lib/cli"
   ],
   "ava": {
     "files": [
