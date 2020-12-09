@@ -112,7 +112,7 @@
     "!**/*.json",
     "CHANGELOG.md",
     "LICENSE",
-    "README.md",
+    "README.md"
   ],
   "ava": {
     "files": [
