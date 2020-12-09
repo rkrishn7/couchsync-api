@@ -10,7 +10,7 @@ There are two small tests inside of the /src/lib/utils/users/test/index.spec.ts 
 
 ## Rohan Krishnaswamy
 
-I implemented AVA (our unit testing framework) and created global fixtures used to run all test suites. Additionally, I implemented the continuous integration/continuous delivery pipelines across both projects.
+I implemented AVA (our unit testing framework) and created global fixtures used to run all test suites. Additionally, I implemented the continuous integration/continuous delivery pipelines across both projects and re-factored test code to re-use common logic via testing hooks.
 
 One **very important** thing to note with AVA:
 
